@@ -1,0 +1,33 @@
+<div class="dashboard-container">
+  <h2>Mis Reservas</h2>
+  
+  <div *ngIf="reservas.length === 0" class="no-reservas">
+    <p>No tienes reservas registradas.</p>
+    <a routerLink="/calendario" class="btn-reservar">Hacer una reserva</a>
+  </div>
+  
+  <div *ngIf="reservas.length > 0" class="reservas-list">
+    <div *ngFor="let reserva of reservas" class="reserva-card" [class.pendiente]="reserva.estado === 'pendiente'"
+         [class.confirmada]="reserva.estado === 'confirmada'" [class.cancelada]="reserva.estado === 'cancelada'">
+      <div class="reserva-header">
+        <h3>{{ reserva.paquete_nombre }}</h3>
+        <span class="estado-badge">{{ reserva.estado | uppercase }}</span>
+      </div>
+      
+      <div class="reserva-body">
+        <p><strong>Fecha:</strong> {{ reserva.fecha | date:'fullDate' }}</p>
+        <p><strong>Precio:</strong> ${{ reserva.precio | number:'1.2-2' }}</p>
+        <p><strong>Depósito:</strong> ${{ reserva.precio * 0.5 | number:'1.2-2' }}</p>
+      </div>
+      
+      <div class="reserva-actions">
+        <button *ngIf="reserva.estado === 'pendiente'" (click)="cancelarReserva(reserva.id)" class="btn-cancelar">
+          Cancelar Reserva
+        </button>
+        <button *ngIf="reserva.estado === 'confirmada'" disabled class="btn-pagar">
+          Pagar Saldo (${{ reserva.precio * 0.5 | number:'1.2-2' }})
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

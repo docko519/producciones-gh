@@ -1,0 +1,17 @@
+<footer>
+  <div *ngFor="let admin of administradores">
+    <h4>{{ admin.nombre }}</h4>
+    <a [href]="admin.whatsapp" target="_blank">
+      <img src="https://cdn-icons-png.flaticon.com/512/3670/3670051.png" alt="WhatsApp">
+    </a>
+    <a [href]="admin.instagram" target="_blank">
+      <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram">
+    </a>
+    <a [href]="admin.facebook" target="_blank">
+      <img src="https://cdn-icons-png.flaticon.com/512/5968/5968764.png" alt="Facebook">
+    </a>
+    <a [href]="admin.tiktok" target="_blank">
+      <img src="https://cdn-icons-png.flaticon.com/512/3046/3046126.png" alt="TikTok">
+    </a>
+  </div>
+</footer>

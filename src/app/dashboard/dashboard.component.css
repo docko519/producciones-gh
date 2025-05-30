@@ -1,0 +1,121 @@
+.dashboard-container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+.no-reservas {
+  text-align: center;
+  padding: 40px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.btn-reservar {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #D4AF37;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.btn-reservar:hover {
+  background-color: #c9a227;
+}
+
+.reservas-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.reserva-card {
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.reserva-card.pendiente {
+  border-left: 5px solid #FFA500;
+}
+
+.reserva-card.confirmada {
+  border-left: 5px solid #378006;
+}
+
+.reserva-card.cancelada {
+  border-left: 5px solid #FF0000;
+  opacity: 0.7;
+}
+
+.reserva-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.estado-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.pendiente .estado-badge {
+  background-color: #FFA500;
+  color: white;
+}
+
+.confirmada .estado-badge {
+  background-color: #378006;
+  color: white;
+}
+
+.cancelada .estado-badge {
+  background-color: #FF0000;
+  color: white;
+}
+
+.reserva-body p {
+  margin: 8px 0;
+}
+
+.reserva-actions {
+  margin-top: 15px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-cancelar, .btn-pagar {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.btn-cancelar {
+  background-color: #FF0000;
+  color: white;
+}
+
+.btn-cancelar:hover {
+  background-color: #cc0000;
+}
+
+.btn-pagar {
+  background-color: #D4AF37;
+  color: white;
+}
+
+.btn-pagar:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}

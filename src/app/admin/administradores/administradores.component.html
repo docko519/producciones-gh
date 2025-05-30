@@ -1,0 +1,15 @@
+<div class="admin-container">
+    <h3>Administradores</h3>
+    
+    <div *ngFor="let admin of administradores" class="admin-card">
+      <h4>{{ admin.nombre }}</h4>
+      <p><strong>Teléfono:</strong> {{ admin.telefono }}</p>
+      
+      <div class="social-links">
+        <a [href]="admin.whatsapp" target="_blank">WhatsApp</a>
+        <a [href]="admin.instagram" target="_blank">Instagram</a>
+        <a [href]="admin.facebook" target="_blank">Facebook</a>
+        <a [href]="admin.tiktok" target="_blank">TikTok</a>
+      </div>
+    </div>
+  </div>

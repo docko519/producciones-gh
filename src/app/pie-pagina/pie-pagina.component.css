@@ -1,0 +1,45 @@
+/* pie-pagina.component.css */
+footer {
+  background-color: #D4AF37; /* Dorado */
+  color: white;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+}
+
+footer h4 {
+  margin-bottom: 10px;
+  font-size: 18px;
+  color: #ffffff; /* Cambiamos el color del nombre a blanco */
+}
+
+footer a {
+  margin: 0 10px;
+  display: inline-block;
+}
+
+footer img {
+  width: 30px;
+  height: 30px;
+  transition: transform 0.3s ease; /* Efecto de hover */
+}
+
+footer img:hover {
+  transform: scale(1.2); /* Escala los íconos al hacer hover */
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  footer {
+    padding: 15px;
+  }
+
+  footer h4 {
+    font-size: 16px;
+  }
+
+  footer img {
+    width: 25px;
+    height: 25px;
+  }
+}

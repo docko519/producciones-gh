@@ -1,0 +1,24 @@
+<div class="login-container">
+  <h2>Iniciar Sesión</h2>
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <label for="telefono">Número de teléfono</label>
+      <input type="tel" id="telefono" formControlName="telefono" placeholder="Ingresa tu número de teléfono">
+      <div *ngIf="loginForm.get('telefono')?.hasError('required') && loginForm.get('telefono')?.touched">
+        El número de teléfono es obligatorio.
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="password">Contraseña</label>
+      <input type="password" id="password" formControlName="password" placeholder="Ingresa tu contraseña">
+      <div *ngIf="loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched">
+        La contraseña es obligatoria.
+      </div>
+    </div>
+    <button type="submit" [disabled]="loginForm.invalid">Iniciar Sesión</button>
+  </form>
+
+  <div class="register-link">
+    <p>¿No tienes una cuenta? <a routerLink="/register">Regístrate aquí</a></p>
+  </div>
+</div>

@@ -1,0 +1,31 @@
+<div class="galeria-container">
+    <h2>Galería de Eventos</h2>
+    <div class="galeria-miniaturas">
+        <div *ngFor="let archivo of archivos; let i = index" class="miniatura" (click)="abrirModal(archivo)">
+            <ng-container *ngIf="archivo.endsWith('.mp4'); else imagenMiniatura">
+                <video class="miniatura-video">
+                    <source [src]="archivo" type="video/mp4">
+                </video>
+            </ng-container>
+            <ng-template #imagenMiniatura>
+                <img [src]="archivo" class="miniatura-imagen" alt="Evento {{ i + 1 }}">
+            </ng-template>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para mostrar la imagen/video en grande -->
+<div *ngIf="modalAbierto" class="modal" (click)="cerrarModal()">
+    <div class="modal-contenido" (click)="$event.stopPropagation()">
+        <span class="cerrar-modal" (click)="cerrarModal()">&times;</span>
+        <ng-container *ngIf="archivoSeleccionado.endsWith('.mp4'); else imagenGrande">
+            <video class="modal-video" controls autoplay>
+                <source [src]="archivoSeleccionado" type="video/mp4">
+                Tu navegador no soporta el elemento de video.
+            </video>
+        </ng-container>
+        <ng-template #imagenGrande>
+            <img [src]="archivoSeleccionado" class="modal-imagen" alt="Evento">
+        </ng-template>
+    </div>
+</div>

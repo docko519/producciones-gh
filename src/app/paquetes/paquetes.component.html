@@ -1,0 +1,7 @@
+<div>
+    <h2>Paquetes Disponibles</h2>
+    <div *ngFor="let paquete of paquetes">
+        <h3>{{ paquete.nombre }} - ${{ paquete.precio }}</h3>
+        <p>{{ paquete.descripcion }}</p>
+    </div>
+</div>

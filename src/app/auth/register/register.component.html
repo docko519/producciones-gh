@@ -1,0 +1,82 @@
+<div class="register-container">
+  <h2>Registro</h2>
+  
+  <div *ngIf="!verificationSent">
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <!-- Campos del formulario existentes -->
+      <div class="form-group">
+        <label for="nombre">Nombre</label>
+        <input type="text" id="nombre" formControlName="nombre" placeholder="Ingresa tu nombre completo">
+        <div *ngIf="registerForm.get('nombre')?.hasError('required') && registerForm.get('nombre')?.touched">
+          El nombre es obligatorio.
+        </div>
+        <div *ngIf="registerForm.get('nombre')?.hasError('minlength')">
+          El nombre debe tener al menos 3 caracteres.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Correo electrónico</label>
+        <input type="email" id="email" formControlName="email" placeholder="Ingresa tu correo">
+        <div *ngIf="registerForm.get('email')?.hasError('required') && registerForm.get('email')?.touched">
+          El correo es obligatorio.
+        </div>
+        <div *ngIf="registerForm.get('email')?.hasError('email')">
+          Ingresa un correo válido.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="telefono">Número de teléfono</label>
+        <input type="tel" id="telefono" formControlName="telefono" placeholder="Ingresa tu número de teléfono (10 dígitos)">
+        <div *ngIf="registerForm.get('telefono')?.hasError('required') && registerForm.get('telefono')?.touched">
+          El número de teléfono es obligatorio.
+        </div>
+        <div *ngIf="registerForm.get('telefono')?.hasError('pattern')">
+          El teléfono debe tener 10 dígitos.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" formControlName="password" placeholder="Ingresa tu contraseña (mínimo 8 caracteres)">
+        <div *ngIf="registerForm.get('password')?.hasError('required') && registerForm.get('password')?.touched">
+          La contraseña es obligatoria.
+        </div>
+        <div *ngIf="registerForm.get('password')?.hasError('minlength')">
+          La contraseña debe tener al menos 8 caracteres.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirmar contraseña</label>
+        <input type="password" id="confirmPassword" formControlName="confirmPassword" placeholder="Confirma tu contraseña">
+        <div *ngIf="registerForm.get('confirmPassword')?.hasError('required') && registerForm.get('confirmPassword')?.touched">
+          La confirmación de contraseña es obligatoria.
+        </div>
+        <div *ngIf="registerForm.hasError('mismatch')">
+          Las contraseñas no coinciden.
+        </div>
+      </div>
+
+      <button type="submit" [disabled]="registerForm.invalid">Enviar código de verificación</button>
+    </form>
+  </div>
+
+  <div *ngIf="verificationSent" class="verification-container">
+    <h3>Verificación de correo electrónico</h3>
+    <p>Hemos enviado un código de verificación a tu correo electrónico. Por favor ingrésalo a continuación:</p>
+    
+    <div class="form-group">
+      <label for="verificationCode">Código de verificación</label>
+      <input type="text" id="verificationCode" [(ngModel)]="verificationCode" placeholder="Ingresa el código de 6 dígitos">
+    </div>
+    
+    <button (click)="verifyCode()">Verificar código</button>
+    <button (click)="verificationSent = false">Volver</button>
+  </div>
+
+  <div class="login-link">
+    <p>¿Ya tienes una cuenta? <a routerLink="/login">Inicia sesión aquí</a></p>
+  </div>
+</div>

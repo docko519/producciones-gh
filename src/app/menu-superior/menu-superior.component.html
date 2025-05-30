@@ -1,0 +1,23 @@
+<nav>
+  <div class="logo">
+    <a routerLink="/">Producciones GH</a>
+  </div>
+  
+  <div class="nav-links">
+    <a routerLink="/informacion">Información</a>
+    <a routerLink="/paquetes">Paquetes</a>
+    <a routerLink="/galeria">Galería</a>
+    
+    <div *ngIf="authService.isAuthenticated()" class="user-section">
+      <a routerLink="/calendario" *ngIf="!authService.isAdmin()">Calendario</a>
+      <a routerLink="/reservas" *ngIf="!authService.isAdmin()">Mis Reservas</a>
+      <a routerLink="/admin/reservas" *ngIf="authService.isAdmin()">Panel Admin</a>
+      <button (click)="logout()">Cerrar sesión</button>
+    </div>
+    
+    <div *ngIf="!authService.isAuthenticated()" class="auth-links">
+      <a routerLink="/login">Iniciar sesión</a>
+      <a routerLink="/register">Registrarse</a>
+    </div>
+  </div>
+</nav>
