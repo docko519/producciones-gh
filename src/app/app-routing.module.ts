@@ -14,6 +14,40 @@ import { GaleriaComponent } from './galeria/galeria.component';
 import { AuthGuard } from './auth/auth.guard';
 import { AdminGuard } from './admin/admin.guard';
 
+// const routes: Routes = [
+//   { path: 'login', component: LoginComponent },
+//   { path: 'register', component: RegisterComponent },
+//   { path: 'forgot-password', component: ForgotPasswordComponent },
+//   { path: 'reset-password', component: ResetPasswordComponent },
+//   { 
+//     path: 'dashboard', 
+//     component: DashboardComponent,
+//     canActivate: [AuthGuard]
+//   },
+//   { 
+//     path: 'calendario', 
+//     component: CalendarioComponent,
+//     canActivate: [AuthGuard]
+//   },
+//   { 
+//     path: 'reserva/:fecha', 
+//     component: ReservaComponent,
+//     canActivate: [AuthGuard]
+//   },
+//   { path: 'informacion', component: InformacionComponent },
+//   { path: 'contrato', component: ContratoComponent },
+//   { path: 'paquetes', component: PaquetesComponent },
+//   { path: 'galeria', component: GaleriaComponent },
+//   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
+//   { path: '**', redirectTo: '/dashboard' },
+//   { 
+//     path: 'admin', 
+//     loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule),
+//     canActivate: [AuthGuard, AdminGuard] 
+//   },
+ 
+// ];
+
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
@@ -23,6 +57,11 @@ const routes: Routes = [
     path: 'dashboard', 
     component: DashboardComponent,
     canActivate: [AuthGuard]
+  },
+    { 
+    path: 'admin',
+    loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule),
+    canActivate: [AuthGuard, AdminGuard] // ✅ Solo admins
   },
   { 
     path: 'calendario', 
@@ -45,9 +84,7 @@ const routes: Routes = [
     loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule),
     canActivate: [AuthGuard, AdminGuard] 
   },
- 
 ];
-
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule]
