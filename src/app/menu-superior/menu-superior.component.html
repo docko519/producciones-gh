@@ -1,7 +1,9 @@
 <nav>
   <div class="logo">
-    <a routerLink="/">Producciones GH</a>
-  </div>
+  <a routerLink="/">Producciones GH 
+    <span class="username" *ngIf="usuario?.nombre">({{ usuario.nombre }})</span>
+  </a>
+</div>
   
   <div class="nav-links">
     <a routerLink="/informacion">Información</a>

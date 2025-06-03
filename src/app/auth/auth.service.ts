@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap, map, catchError } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
+import { Usuario } from '../models/usuario.model';
 
 @Injectable({
   providedIn: 'root'
@@ -49,10 +50,15 @@ export class AuthService {
     localStorage.setItem('user', JSON.stringify(user));
   }
   
-  getCurrentUser(): any {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
-  }
+  // getCurrentUser(): any {
+  //   const user = localStorage.getItem('user');
+  //   return user ? JSON.parse(user) : null;
+  // }
+
+ getCurrentUser(): any {
+  const user = localStorage.getItem('user');
+  return user ? JSON.parse(user) : null;
+ }
 
   logout(): void {
     localStorage.removeItem('user');
