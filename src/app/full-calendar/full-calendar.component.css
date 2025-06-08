@@ -1,20 +1,117 @@
+/* Estructura principal */
+#calendar {
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Cabecera del calendario */
+.fc-header-toolbar {
+  margin-bottom: 1em;
+}
+
+/* Celdas del día */
+.fc-daygrid-day-frame {
+  padding: 0;
+  overflow: visible;
+}
+
+/* Número del día */
+.fc-daygrid-day-number {
+  font-weight: bold;
+  z-index: 2;
+  position: relative;
+  padding: 4px;
+}
+
+/* Eventos de fondo */
+.fc-daygrid-bg-harness {
+  z-index: 1;
+  pointer-events: none;
+}
+
 .fc-event {
-  color: white !important;
-  padding: 2px;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* Efecto de halo con degradado */
+.fc-event::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
   border-radius: 3px;
+  z-index: -1;
+  transition: all 0.3s ease;
 }
 
-.fc-event-disponible {
-  background-color: #378006;
-  border-color: #2a6505;
+/* Estilos para estado disponible */
+.fc-event-disponible::before {
+  background: radial-gradient(
+    circle at center,
+    rgba(55, 128, 6, 0.3) 0%,
+    rgba(55, 128, 6, 0.2) 50%,
+    transparent 70%
+  );
+  box-shadow: 0 0 10px rgba(55, 128, 6, 0.3);
 }
 
-.fc-event-pendiente {
-  background-color: #FFA500;
-  border-color: #cc8400;
+/* Estilos para estado no disponible */
+.fc-event-no-disponible::before {
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 0, 0, 0.3) 0%,
+    rgba(255, 0, 0, 0.2) 50%,
+    transparent 70%
+  );
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
 }
 
-.fc-event-no-disponible {
-  background-color: #FF0000;
-  border-color: #cc0000;
-} 
+/* Animaciones */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-3px); }
+  40%, 80% { transform: translateX(3px); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+.fc-daygrid-day:hover {
+  animation: pulse 2s infinite;
+}
+
+.fc-event-loaded {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Efecto hover para días disponibles */
+.fc-daygrid-day:hover .fc-event-disponible::before {
+  transform: scale(1.05);
+  opacity: 0.8;
+}
+
+/* Estilo para hoy */
+.fc-daygrid-day.fc-day-today {
+  background-color: rgba(255, 220, 40, 0.15);
+}
+
+.fc-day-today .fc-daygrid-day-number {
+  color: #2c3e50;
+  font-weight: bold;
+}

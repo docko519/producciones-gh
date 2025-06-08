@@ -26,3 +26,18 @@ a:hover {
   margin: 0 auto;
   padding: 20px;
 }
+
+/* Estilos globales para eventos de calendario */
+.fc-daygrid-day-bg .fc-daygrid-bg-harness .fc-event {
+  opacity: 0.7;
+  border-radius: 2px;
+}
+
+.fc-event-disponible {
+  background-color: #378006 !important;
+}
+
+.fc-event-no-disponible {
+  background-color: #FF0000 !important;
+  pointer-events: none !important;
+}

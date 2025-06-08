@@ -137,37 +137,64 @@ app.get('/api/administradores', async (req, res) => {
 // Obtener eventos calendario
 app.get('/api/eventos-calendario', async (req, res) => {
   try {
-    const [eventos] = await db.query(`
+    const [fechas] = await db.query(`
       SELECT 
-        f.fecha,
-        CASE WHEN r.estado = 'confirmada' THEN 'no-disponible'
-             WHEN r.estado = 'pendiente' THEN 'pendiente'
-             ELSE 'disponible' END as estado
+        DATE_FORMAT(f.fecha, '%Y-%m-%d') as date,
+        CASE 
+          WHEN f.disponible = 1 THEN 'disponible'
+          ELSE 'no-disponible' 
+        END as estado
       FROM fechas f
-      LEFT JOIN reservas r ON f.id = r.fecha_id
-      WHERE f.fecha BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 1 YEAR)
-      ORDER BY f.fecha
     `);
-
-    const eventosFormateados = eventos.map(e => ({
-      id: e.fecha,
-      title: e.estado === 'disponible' ? 'Disponible' :
-             e.estado === 'pendiente' ? 'Pendiente' : 'No disponible',
-      date: e.fecha,
-      color: e.estado === 'disponible' ? '#378006' :
-             e.estado === 'pendiente' ? '#FFA500' : '#FF0000',
-      textColor: '#FFFFFF',
+    
+    const eventos = fechas.map(f => ({
+      start: f.date,
       display: 'background',
-      extendedProps: { estado: e.estado }
+      backgroundColor: f.estado === 'disponible' ? '#378006' : '#FF0000',
+      className: `fc-event-${f.estado}`,
+      extendedProps: {
+        estado: f.estado
+      }
     }));
     
-
-    res.json(eventosFormateados);
+    res.json(eventos);
   } catch (err) {
-    console.error('Error obteniendo eventos:', err);
-    res.status(500).json({ error: 'Error cargando eventos' });
+    res.status(500).json({ error: err.message });
   }
 });
+// app.get('/api/eventos-calendario', async (req, res) => {
+//   try {
+//     const [eventos] = await db.query(`
+//       SELECT 
+//         f.fecha,
+//         CASE WHEN r.estado = 'confirmada' THEN 'no-disponible'
+//              WHEN r.estado = 'pendiente' THEN 'pendiente'
+//              ELSE 'disponible' END as estado
+//       FROM fechas f
+//       LEFT JOIN reservas r ON f.id = r.fecha_id
+//       WHERE f.fecha BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 1 YEAR)
+//       ORDER BY f.fecha
+//     `);
+
+//     const eventosFormateados = eventos.map(e => ({
+//       id: e.fecha,
+//       title: e.estado === 'disponible' ? 'Disponible' :
+//              e.estado === 'pendiente' ? 'Pendiente' : 'No disponible',
+//       date: e.fecha,
+//       color: e.estado === 'disponible' ? '#378006' :
+//              e.estado === 'pendiente' ? '#FFA500' : '#FF0000',
+//       textColor: '#FFFFFF',
+//       display: 'background',
+//       extendedProps: { estado: e.estado }
+//     }));
+    
+
+//     res.json(eventosFormateados);
+//   } catch (err) {
+//     console.error('Error obteniendo eventos:', err);
+//     res.status(500).json({ error: 'Error cargando eventos' });
+//   }
+// });
 
 // Crear reserva
 app.post('/api/reservas', async (req, res) => {
