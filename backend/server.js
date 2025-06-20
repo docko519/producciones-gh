@@ -4,6 +4,7 @@ const cors = require('cors');
 const db = require('./db');
 const bcrypt = require('bcryptjs');
 
+
 const app = express();
 const port = 3000;
 
@@ -472,6 +473,52 @@ app.put('/api/admin/reservas/:id', isAdmin, async (req, res) => {
     res.status(500).json({ error: 'Error actualizando reserva' });
   }
 });
+
+//Delete y actualizar en el calendario 
+app.delete('/api/reservas/:id', async (req, res) => {
+  const reservaId = req.params.id;
+  console.log('📌 Intentando eliminar reserva con ID:', reservaId);
+
+  try {
+    // Paso 1: obtener la fecha asociada
+    const [reservaRows] = await db.query(
+      'SELECT fecha_id FROM reservas WHERE id = ?',
+      [reservaId]
+    );
+
+    console.log('🔍 Resultado del SELECT:', reservaRows);
+
+    if (reservaRows.length === 0) {
+      return res.status(404).json({ message: 'Reserva no encontrada' });
+    }
+
+    const fechaId = reservaRows[0].fecha_id;
+
+    // Paso 2: eliminar la reserva
+    const [deleteResult] = await db.query(
+      'DELETE FROM reservas WHERE id = ?',
+      [reservaId]
+    );
+
+    console.log(`✅ Reserva eliminada. Afectadas: ${deleteResult.affectedRows}`);
+
+    // Paso 3: liberar la fecha
+    const [updateResult] = await db.query(
+      'UPDATE fechas SET disponible = 1 WHERE id = ?',
+      [fechaId]
+    );
+
+    console.log(`✅ Fecha con ID ${fechaId} marcada como disponible.`);
+
+    res.status(200).json({ message: 'Reserva eliminada y fecha liberada' });
+
+  } catch (error) {
+    console.error('❌ Error en la operación:', error);
+    res.status(500).json({ error: 'Error en el servidor al eliminar reserva' });
+  }
+});
+
+
 
 // Iniciar servidor
 app.listen(port, () => {
