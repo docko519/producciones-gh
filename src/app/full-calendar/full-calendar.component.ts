@@ -1,48 +1,45 @@
-import { Component, AfterViewInit, OnDestroy } from '@angular/core';
-import { Calendar, CalendarOptions } from '@fullcalendar/core';
+import { Component, AfterViewInit } from '@angular/core';
+import { Calendar, CalendarOptions, EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { AuthService } from '../auth/auth.service';
-import { CalendarService } from '../services/calendar.service';
-import { Subscription } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-full-calendar',
   templateUrl: './full-calendar.component.html',
   styleUrls: ['./full-calendar.component.css']
 })
-export class FullCalendarComponent implements AfterViewInit, OnDestroy {
+export class FullCalendarComponent implements AfterViewInit {
   private calendar!: Calendar;
-  private calendarSub!: Subscription;
-
+  
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, interactionPlugin],
     initialView: 'dayGridMonth',
     dateClick: this.handleDateClick.bind(this),
     events: [],
     eventDisplay: 'background',
-    eventColor: '#378006',
-    eventTextColor: '#ffffff'
+    eventDidMount: this.handleEventRender.bind(this),
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth'
+    },
+    dayMaxEvents: true,
+    selectable: true,
+    timeZone: 'local',
+    dayCellClassNames: 'fc-day-cell',
+    eventClassNames: 'fc-custom-event'
   };
 
   constructor(
     private authService: AuthService,
-    private calendarService: CalendarService
+    private router: Router
   ) {}
 
   ngAfterViewInit(): void {
     this.initCalendar();
     this.loadCalendarEvents();
-
-    this.calendarSub = this.calendarService.updateCalendar$.subscribe(() => {
-      this.loadCalendarEvents();
-    });
-  }
-
-  ngOnDestroy(): void {
-    if (this.calendarSub) {
-      this.calendarSub.unsubscribe();
-    }
   }
 
   private initCalendar(): void {
@@ -52,29 +49,57 @@ export class FullCalendarComponent implements AfterViewInit, OnDestroy {
       this.calendar.render();
     }
   }
+
   private loadCalendarEvents(): void {
     this.authService.getEventosCalendario().subscribe({
       next: (eventos: any) => {
         this.calendar.removeAllEvents();
-        this.calendar.addEventSource(eventos); // 👈 usa directamente
+        this.calendar.addEventSource(eventos);
+        
+        // Forzar actualización visual
+        setTimeout(() => {
+          this.calendar.render();
+          document.querySelectorAll('.fc-event').forEach(el => {
+            el.classList.add('fc-event-loaded');
+          });
+        }, 50);
       },
-      error: (err) => console.error('Error cargando eventos:', err)
+      error: (err) => console.error('Error:', err)
     });
   }
-  
-  
-  private getEventColor(estado: string): string {
-    switch (estado) {
-      case 'disponible': return '#378006';
-      case 'pendiente': return '#FFA500';
-      case 'no-disponible': return '#FF0000';
-      default: return '#cccccc';
+
+  private handleEventRender(info: any): void {
+    // Añadir clases según el estado
+    info.el.classList.add(`fc-event-${info.event.extendedProps.estado}`);
+    
+    // Deshabilitar interacción en eventos de fondo
+    if (info.event.display === 'background') {
+      info.el.style.pointerEvents = 'none';
     }
   }
-  
 
-  handleDateClick(arg: any): void {
-    const fechaSeleccionada = arg.dateStr;
-    this.calendarService.notifyDateSelected(fechaSeleccionada);
+  private handleDateClick(info: any): void {
+    const eventos = this.calendar.getEvents();
+    const eventosEnFecha = eventos.filter(e => 
+      e.start && new Date(e.start).toISOString().slice(0, 10) === info.dateStr
+    );
+
+    const puedeReservar = eventosEnFecha.length === 0 || 
+      eventosEnFecha.some(e => e.extendedProps['estado'] === 'disponible');
+
+    if (puedeReservar) {
+      // Animación al hacer clic
+      info.dayEl.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        info.dayEl.style.transform = '';
+        this.router.navigate(['/reserva', info.dateStr]);
+      }, 300);
+    } else {
+      // Feedback visual para fechas no disponibles
+      info.dayEl.style.animation = 'shake 0.5s';
+      setTimeout(() => {
+        info.dayEl.style.animation = '';
+      }, 500);
+    }
   }
 }
