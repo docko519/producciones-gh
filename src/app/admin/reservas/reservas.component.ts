@@ -33,6 +33,7 @@
 
 import { Component, OnInit } from '@angular/core';
 import { AuthAdminService } from '../auth-admin.service';
+import { FullCalendarComponent } from 'src/app/full-calendar/full-calendar.component';
 
 @Component({
   selector: 'app-reservas',
@@ -41,7 +42,7 @@ import { AuthAdminService } from '../auth-admin.service';
 })
 export class ReservasComponent implements OnInit {
   reservas: any[] = [];
-  estados = ['pendiente', 'confirmada', 'cancelada', 'rechazada'];
+  estados = ['pendiente', 'confirmada', 'cancelada']; 
 
   constructor(private adminService: AuthAdminService) {}
 
@@ -62,4 +63,12 @@ export class ReservasComponent implements OnInit {
       error: (err) => console.error('Error al actualizar estado:', err)
     });
   }
+
+  eliminarReserva(id: number): void {
+    this.adminService.deleteReserva(id).subscribe({
+      next: () => this.loadReservas(),
+      error: (err) => console.error('Error al eliminar reserva:', err)
+    });
+  }
 }
+

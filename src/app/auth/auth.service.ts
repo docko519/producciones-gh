@@ -12,10 +12,10 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  isAdmin(): boolean {
-    const user = this.getCurrentUser();
-    return user ? user.isAdmin : false;
-  }
+isAdmin(): boolean {
+  const user = this.getCurrentUser();
+  return user?.isAdmin === true;
+}
 
   login(credentials: { telefono: string, password: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, credentials).pipe(

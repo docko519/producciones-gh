@@ -1,0 +1,51 @@
+<div class="container">
+  <h2>Administración de Paquetes</h2>
+  
+  <button mat-raised-button color="primary" (click)="openEditDialog()">
+    <mat-icon>add</mat-icon> Nuevo Paquete
+  </button>
+
+  <div class="table-container">
+    <mat-progress-bar *ngIf="isLoading" mode="indeterminate"></mat-progress-bar>
+    
+    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8" *ngIf="!isLoading">
+      <!-- Nombre Column -->
+      <ng-container matColumnDef="nombre">
+        <th mat-header-cell *matHeaderCellDef> Nombre </th>
+        <td mat-cell *matCellDef="let pkg"> {{ pkg.nombre }} </td>
+      </ng-container>
+
+      <!-- Descripción Column -->
+      <ng-container matColumnDef="descripcion">
+        <th mat-header-cell *matHeaderCellDef> Descripción </th>
+        <td mat-cell *matCellDef="let pkg"> {{ pkg.descripcion }} </td>
+      </ng-container>
+
+      <!-- Precio Column -->
+      <ng-container matColumnDef="precio">
+        <th mat-header-cell *matHeaderCellDef> Precio </th>
+        <td mat-cell *matCellDef="let pkg"> {{ pkg.precio | currency:'MXN':'symbol':'1.2-2' }} </td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef> Acciones </th>
+        <td mat-cell *matCellDef="let pkg">
+          <button mat-icon-button (click)="openEditDialog(pkg)" matTooltip="Editar">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="deletePackage(pkg.id)" matTooltip="Eliminar">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <div *ngIf="!isLoading && dataSource.data.length === 0" class="no-data">
+      No hay paquetes registrados
+    </div>
+  </div>
+</div>

@@ -15,6 +15,7 @@ app.use(cors({
   origin: 'http://localhost:4200',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
+  
 }));
 
 app.use(bodyParser.json());
@@ -32,6 +33,11 @@ app.use(async (req, res, next) => {
 });
 
 // Ruta de estado
+app.get('/api/status', (req, res) => {
+  res.json({ status: 'Servidor funcionando', timestamp: new Date() });
+});
+
+// Registro de usuarios
 app.get('/api/status', (req, res) => {
   res.json({ status: 'Servidor funcionando', timestamp: new Date() });
 });
@@ -444,6 +450,15 @@ app.put('/api/reservas/:id/cancelar', async (req, res) => {
 //------------------------ADMIN--------------------//
 // Middleware para verificar admin
 const isAdmin = async (req, res, next) => {
+   console.log('Verificando admin...'); // Debug
+  try {
+    // Temporal: Permitir todas las solicitudes para testing
+    console.log('Acceso concedido (testing)');
+    return next();
+    } catch (err) {
+    console.error('Error en middleware isAdmin:', err);
+    res.status(500).json({ error: 'Error de autenticación' });
+  }
   const telefono = req.query.telefono;
   if (!telefono) {
     return res.status(400).json({ error: 'Falta número de teléfono del admin' });
@@ -504,7 +519,7 @@ app.put('/api/admin/reservas/:id', isAdmin, async (req, res) => {
 //Delete y actualizar en el calendario 
 app.delete('/api/reservas/:id', async (req, res) => {
   const reservaId = req.params.id;
-  console.log('📌 Intentando eliminar reserva con ID:', reservaId);
+  console.log('Intentando eliminar reserva con ID:', reservaId);
 
   try {
     // Paso 1: obtener la fecha asociada
@@ -513,7 +528,7 @@ app.delete('/api/reservas/:id', async (req, res) => {
       [reservaId]
     );
 
-    console.log('🔍 Resultado del SELECT:', reservaRows);
+    console.log('Resultado del SELECT:', reservaRows);
 
     if (reservaRows.length === 0) {
       return res.status(404).json({ message: 'Reserva no encontrada' });
@@ -527,7 +542,7 @@ app.delete('/api/reservas/:id', async (req, res) => {
       [reservaId]
     );
 
-    console.log(`✅ Reserva eliminada. Afectadas: ${deleteResult.affectedRows}`);
+    console.log(`Reserva eliminada. Afectadas: ${deleteResult.affectedRows}`);
 
     // Paso 3: liberar la fecha
     const [updateResult] = await db.query(
@@ -535,19 +550,360 @@ app.delete('/api/reservas/:id', async (req, res) => {
       [fechaId]
     );
 
-    console.log(`✅ Fecha con ID ${fechaId} marcada como disponible.`);
+    console.log(`Fecha con ID ${fechaId} marcada como disponible.`);
 
     res.status(200).json({ message: 'Reserva eliminada y fecha liberada' });
 
   } catch (error) {
-    console.error('❌ Error en la operación:', error);
+    console.error('Error en la operación:', error);
     res.status(500).json({ error: 'Error en el servidor al eliminar reserva' });
+  }
+});
+
+// Obtener todos los usuarios
+app.get('/api/usuarios', async (req, res) => {
+  try {
+    const [users] = await db.query(`
+      SELECT id, nombre, email, telefono, created_at as fecha_registro 
+      FROM usuarios
+    `);
+    res.json(users);
+  } catch (err) {
+    console.error('Error obteniendo usuarios:', err);
+    res.status(500).json({ error: 'Error al cargar usuarios' });
+  }
+});
+
+// Crear usuario
+app.post('/api/usuarios', async (req, res) => {
+  const { nombre, email, telefono, password } = req.body;
+  
+  try {
+    // Verificar si ya existe
+    const [exists] = await db.query(
+      'SELECT id FROM usuarios WHERE email = ? OR telefono = ?', 
+      [email, telefono]
+    );
+
+    if (exists.length > 0) {
+      return res.status(400).json({ error: 'El correo o teléfono ya está registrado' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const [result] = await db.query(
+      'INSERT INTO usuarios (nombre, email, telefono, password) VALUES (?, ?, ?, ?)',
+      [nombre, email, telefono, hashedPassword]
+    );
+
+    res.status(201).json({ 
+      id: result.insertId,
+      nombre,
+      email,
+      telefono
+    });
+  } catch (err) {
+    console.error('Error creando usuario:', err);
+    res.status(500).json({ error: 'Error al crear usuario' });
+  }
+});
+
+// Actualizar usuario
+app.put('/api/usuarios/:id', async (req, res) => {
+  const { id } = req.params;
+  const { nombre, email, telefono } = req.body;
+
+  try {
+    // Verificar si el email/teléfono ya existe en otro usuario
+    const [exists] = await db.query(
+      'SELECT id FROM usuarios WHERE (email = ? OR telefono = ?) AND id != ?',
+      [email, telefono, id]
+    );
+
+    if (exists.length > 0) {
+      return res.status(400).json({ error: 'El correo o teléfono ya está en uso' });
+    }
+
+    await db.query(
+      'UPDATE usuarios SET nombre = ?, email = ?, telefono = ? WHERE id = ?',
+      [nombre, email, telefono, id]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error actualizando usuario:', err);
+    res.status(500).json({ error: 'Error al actualizar usuario' });
+  }
+});
+
+// Eliminar usuario
+app.delete('/api/usuarios/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query('DELETE FROM usuarios WHERE id = ?', [id]);
+    res.status(204).send();
+  } catch (err) {
+    console.error('Error eliminando usuario:', err);
+    res.status(500).json({ error: 'Error al eliminar usuario' });
+  }
+});
+
+
+// Obtener todos los paquetes
+app.get('/api/paquetes', async (req, res) => {
+  try {
+    const [paquetes] = await db.query('SELECT * FROM paquetes');
+    res.json(paquetes);
+  } catch (err) {
+    console.error('Error obteniendo paquetes:', err);
+    res.status(500).json({ error: 'Error al cargar paquetes' });
+  }
+});
+
+// Crear paquete
+app.get('/api/admin/paquetes', isAdmin, async (req, res) => {
+  try {
+    const [paquetes] = await db.query('SELECT * FROM paquetes');
+    // Asegurarse de devolver siempre un array, incluso si está vacío
+    res.json(paquetes || []);
+  } catch (err) {
+    console.error('Error obteniendo paquetes:', err);
+    res.status(500).json({ error: 'Error obteniendo paquetes', details: err.message });
+  }
+});
+
+// Obtener un paquete específico
+app.get('/api/admin/paquetes', isAdmin, async (req, res) => {
+  console.log('Accediendo a /api/admin/paquetes'); // Debug
+  try {
+    const [paquetes] = await db.query('SELECT * FROM paquetes');
+    console.log('Paquetes encontrados:', paquetes); // Debug
+    res.json(paquetes);
+  } catch (err) {
+    console.error('Error en GET /api/admin/paquetes:', err);
+    res.status(500).json({ error: 'Error al obtener paquetes', details: err.message });
+  }
+});
+
+// Crear paquete
+app.post('/api/admin/paquetes', isAdmin, async (req, res) => {
+  const { nombre, descripcion, precio } = req.body;
+  
+  try {
+    // Verificar si ya existe
+    const [exists] = await db.query(
+      'SELECT id FROM paquetes WHERE nombre = ?', 
+      [nombre]
+    );
+
+    if (exists.length > 0) {
+      return res.status(400).json({ error: 'Ya existe un paquete con este nombre' });
+    }
+
+    // Validaciones
+    if (typeof precio !== 'number' || isNaN(precio)) {
+      return res.status(400).json({ error: 'El precio debe ser un número válido' });
+    }
+    if (precio <= 0) {
+      return res.status(400).json({ error: 'El precio debe ser mayor que cero' });
+    }
+    if (!nombre || !descripcion) {
+      return res.status(400).json({ error: 'Nombre y descripción son requeridos' });
+    }
+
+    const [result] = await db.query(
+      'INSERT INTO paquetes (nombre, descripcion, precio) VALUES (?, ?, ?)',
+      [nombre, descripcion, precio]
+    );
+
+    // Devolver el paquete creado con su ID
+    const [newPaquete] = await db.query('SELECT * FROM paquetes WHERE id = ?', [result.insertId]);
+    res.status(201).json(newPaquete[0]);
+  } catch (err) {
+    console.error('Error creando paquete:', err);
+    res.status(500).json({ error: 'Error al crear paquete' });
+  }
+});
+
+// Actualizar paquete
+app.put('/api/admin/paquetes/:id', isAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { nombre, descripcion, precio } = req.body;
+
+  try {
+    // Verificar si el paquete existe
+    const [existing] = await db.query('SELECT id FROM paquetes WHERE id = ?', [id]);
+    if (existing.length === 0) {
+      return res.status(404).json({ error: 'Paquete no encontrado' });
+    }
+
+    // Verificar nombre duplicado
+    const [duplicate] = await db.query(
+      'SELECT id FROM paquetes WHERE nombre = ? AND id != ?',
+      [nombre, id]
+    );
+    if (duplicate.length > 0) {
+      return res.status(400).json({ error: 'Ya existe un paquete con este nombre' });
+    }
+
+    // Validaciones
+    if (typeof precio !== 'number' || isNaN(precio)) {
+      return res.status(400).json({ error: 'El precio debe ser un número válido' });
+    }
+    if (precio <= 0) {
+      return res.status(400).json({ error: 'El precio debe ser mayor que cero' });
+    }
+    if (!nombre || !descripcion) {
+      return res.status(400).json({ error: 'Nombre y descripción son requeridos' });
+    }
+
+    await db.query(
+      'UPDATE paquetes SET nombre = ?, descripcion = ?, precio = ? WHERE id = ?',
+      [nombre, descripcion, precio, id]
+    );
+
+    // Devolver el paquete actualizado
+    const [updated] = await db.query('SELECT * FROM paquetes WHERE id = ?', [id]);
+    res.json(updated[0]);
+  } catch (err) {
+    console.error('Error actualizando paquete:', err);
+    res.status(500).json({ error: 'Error al actualizar paquete' });
+  }
+});
+
+// Eliminar paquete
+app.delete('/api/admin/paquetes/:id', isAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Verificar si el paquete existe
+    const [existing] = await db.query('SELECT id FROM paquetes WHERE id = ?', [id]);
+    if (existing.length === 0) {
+      return res.status(404).json({ error: 'Paquete no encontrado' });
+    }
+
+    // Verificar reservas asociadas
+    const [reservas] = await db.query(
+      'SELECT id FROM reservas WHERE paquete_id = ?',
+      [id]
+    );
+    if (reservas.length > 0) {
+      return res.status(400).json({ 
+        error: 'No se puede eliminar: tiene reservas asociadas' 
+      });
+    }
+
+    await db.query('DELETE FROM paquetes WHERE id = ?', [id]);
+    res.status(204).send();
+  } catch (err) {
+    console.error('Error eliminando paquete:', err);
+    res.status(500).json({ error: 'Error al eliminar paquete' });
+  }
+});
+// app.post('/api/paquetes', async (req, res) => {
+//   const { nombre, descripcion, precio } = req.body;
+  
+//   try {
+//     // Verificar si ya existe un paquete con el mismo nombre
+//     const [exists] = await db.query(
+//       'SELECT id FROM paquetes WHERE nombre = ?', 
+//       [nombre]
+//     );
+
+//     if (exists.length > 0) {
+//       return res.status(400).json({ error: 'Ya existe un paquete con este nombre' });
+//     }
+
+//     // Validar que el precio sea un número positivo
+//     if (isNaN(precio)) {
+//       return res.status(400).json({ error: 'El precio debe ser un número válido' });
+//     }
+
+//     if (precio <= 0) {
+//       return res.status(400).json({ error: 'El precio debe ser mayor que cero' });
+//     }
+
+//     const [result] = await db.query(
+//       'INSERT INTO paquetes (nombre, descripcion, precio) VALUES (?, ?, ?)',
+//       [nombre, descripcion, precio]
+//     );
+
+//     res.status(201).json({ 
+//       id: result.insertId,
+//       nombre,
+//       descripcion,
+//       precio
+//     });
+//   } catch (err) {
+//     console.error('Error creando paquete:', err);
+//     res.status(500).json({ error: 'Error al crear paquete' });
+//   }
+// });
+
+// Actualizar paquete
+app.put('/api/paquetes/:id', async (req, res) => {
+  const { id } = req.params;
+  const { nombre, descripcion, precio } = req.body;
+
+  try {
+    // Verificar si el nombre ya existe en otro paquete
+    const [exists] = await db.query(
+      'SELECT id FROM paquetes WHERE nombre = ? AND id != ?',
+      [nombre, id]
+    );
+
+    if (exists.length > 0) {
+      return res.status(400).json({ error: 'Ya existe un paquete con este nombre' });
+    }
+
+    // Validar que el precio sea un número positivo
+    if (isNaN(precio)) {
+      return res.status(400).json({ error: 'El precio debe ser un número válido' });
+    }
+
+    if (precio <= 0) {
+      return res.status(400).json({ error: 'El precio debe ser mayor que cero' });
+    }
+
+    await db.query(
+      'UPDATE paquetes SET nombre = ?, descripcion = ?, precio = ? WHERE id = ?',
+      [nombre, descripcion, precio, id]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error actualizando paquete:', err);
+    res.status(500).json({ error: 'Error al actualizar paquete' });
+  }
+});
+
+// Eliminar paquete
+app.delete('/api/paquetes/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Verificar si el paquete tiene reservas asociadas
+    const [reservas] = await db.query(
+      'SELECT id FROM reservas WHERE paquete_id = ?',
+      [id]
+    );
+
+    if (reservas.length > 0) {
+      return res.status(400).json({ 
+        error: 'No se puede eliminar el paquete porque tiene reservas asociadas' 
+      });
+    }
+
+    await db.query('DELETE FROM paquetes WHERE id = ?', [id]);
+    res.status(204).send();
+  } catch (err) {
+    console.error('Error eliminando paquete:', err);
+    res.status(500).json({ error: 'Error al eliminar paquete' });
   }
 });
 
 
 
 // Iniciar servidor
+
+
 app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
 });

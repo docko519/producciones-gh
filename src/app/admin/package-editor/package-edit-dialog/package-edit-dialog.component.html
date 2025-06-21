@@ -1,0 +1,38 @@
+<h2 mat-dialog-title>{{ isNewPackage ? 'Nuevo Paquete' : 'Editar Paquete' }}</h2>
+<div mat-dialog-content>
+  <form [formGroup]="packageForm">
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Nombre del paquete</mat-label>
+      <input matInput formControlName="nombre" required>
+      <mat-error *ngIf="packageForm.get('nombre')?.hasError('required')">
+        Nombre es requerido
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Descripción</mat-label>
+      <textarea matInput formControlName="descripcion" required rows="4"></textarea>
+      <mat-error *ngIf="packageForm.get('descripcion')?.hasError('required')">
+        Descripción es requerida
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Precio</mat-label>
+      <input matInput type="number" formControlName="precio" required min="0.01" step="0.01">
+      <span matPrefix>$&nbsp;</span>
+      <mat-error *ngIf="packageForm.get('precio')?.hasError('required')">
+        Precio es requerido
+      </mat-error>
+      <mat-error *ngIf="packageForm.get('precio')?.hasError('min')">
+        El precio mínimo es $0.01
+      </mat-error>
+    </mat-form-field>
+  </form>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="packageForm.invalid">
+    {{ isNewPackage ? 'Crear' : 'Guardar' }}
+  </button>
+</div>

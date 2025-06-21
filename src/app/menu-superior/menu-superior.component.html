@@ -11,7 +11,7 @@
     <div *ngIf="authService.isAuthenticated()" class="user-section">
       <a routerLink="/calendario" *ngIf="!authService.isAdmin()">Calendario</a>
       <a routerLink="/reservas" *ngIf="!authService.isAdmin()">Mis Reservas</a>
-      <a routerLink="/admin/reservas" *ngIf="authService.isAdmin()">Panel Admin</a>
+      <a routerLink="/admin/reservas" *ngIf="authService.isAdmin()">Administración</a>
       <button (click)="logout()">Cerrar sesión</button>
     </div>
     

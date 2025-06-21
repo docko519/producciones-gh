@@ -4,6 +4,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module'; // Este ya incluye RouterModule
 import { AppComponent } from './app.component';
 import { AuthModule } from './auth/auth.module';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 // Componentes
 import { DashboardComponent } from './dashboard/dashboard.component';
@@ -33,8 +34,10 @@ import { RouterModule } from '@angular/router';
     GaleriaComponent
   ],
   imports: [
+    
     BrowserModule,       // Siempre primero (contiene CommonModule)
-    HttpClientModule,    // Segundo
+    HttpClientModule, // Segundo
+    BrowserAnimationsModule,    
     AppRoutingModule,    // Contiene RouterModule, NO necesitas importarlo por separado
     AuthModule,
     RouterModule.forRoot([])

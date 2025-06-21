@@ -26,19 +26,24 @@
 
 import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AdminGuard implements CanActivate {
-  constructor(private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   canActivate(): boolean {
-    const user = JSON.parse(localStorage.getItem('user') || 'null');
-    if (user?.isAdmin) {
+    if (this.authService.isAdmin()) {
       return true;
     }
-    this.router.navigate(['/login']);
+    
+    console.warn('Acceso denegado: usuario no es administrador');
+    this.router.navigate(['/dashboard']);
     return false;
   }
 }

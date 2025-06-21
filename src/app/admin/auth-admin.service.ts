@@ -24,6 +24,7 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -46,4 +47,9 @@ export class AuthAdminService {
   isAdmin(telefono: string) {
     return this.http.get(`${this.apiUrl}/auth/is-admin?telefono=${telefono}`);
   }
+
+  deleteReserva(id: number): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/reservas/${id}`);
+}
+
 }

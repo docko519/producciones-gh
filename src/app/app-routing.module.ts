@@ -58,10 +58,10 @@ const routes: Routes = [
     component: DashboardComponent,
     canActivate: [AuthGuard]
   },
-    { 
+  { 
     path: 'admin',
     loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule),
-    canActivate: [AuthGuard, AdminGuard] // ✅ Solo admins
+    canActivate: [AuthGuard, AdminGuard] 
   },
   { 
     path: 'calendario', 
@@ -79,11 +79,7 @@ const routes: Routes = [
   { path: 'galeria', component: GaleriaComponent },
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   { path: '**', redirectTo: '/dashboard' },
-  { 
-    path: 'admin', 
-    loadChildren: () => import('./admin/admin.module').then(m => m.AdminModule),
-    canActivate: [AuthGuard, AdminGuard] 
-  },
+
 ];
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
