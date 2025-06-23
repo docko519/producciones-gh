@@ -3,10 +3,18 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const db = require('./db');
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer'); 
 
 
 const app = express();
 const port = 3000;
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+
+const verificationCodes = new Map();
+const verificationAttempts = new Map();
+
+const TOKEN_TEMP_SECRET = 'clave_secreta_temporal'; 
 
 
 
@@ -44,22 +52,72 @@ app.get('/api/status', (req, res) => {
 
 // Registro de usuarios
 app.post('/api/auth/register', async (req, res) => {
-  const { nombre, email, telefono, password } = req.body;
+  const { nombre, email, telefono, password, verificationToken } = req.body;
+  console.log('Datos de registro recibidos:', req.body); // Debug
+
   try {
-    const [exists] = await db.query('SELECT id FROM usuarios WHERE email = ? OR telefono = ?', [email, telefono]);
-    if (exists.length > 0) {
-      return res.status(400).json({ error: 'El correo o teléfono ya está registrado' });
+    // 1. Verificar el token primero
+    try {
+      jwt.verify(verificationToken, 'secreto_temporal');
+    } catch (tokenError) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Token de verificación inválido o expirado' 
+      });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const [result] = await db.query('INSERT INTO usuarios (nombre, email, telefono, password) VALUES (?, ?, ?, ?)', [nombre, email, telefono, hashedPassword]);
+    // 2. Verificar si el usuario ya existe
+    const [exists] = await db.query(
+      'SELECT id FROM usuarios WHERE email = ? OR telefono = ?', 
+      [email, telefono]
+    );
 
-    res.status(201).json({ success: true, userId: result.insertId });
+    if (exists.length > 0) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'El correo o teléfono ya está registrado' 
+      });
+    }
+
+    // 3. Hash de la contraseña
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 4. Crear usuario
+    const [result] = await db.query(
+      'INSERT INTO usuarios (nombre, email, telefono, password) VALUES (?, ?, ?, ?)',
+      [nombre, email, telefono, hashedPassword]
+    );
+
+    res.status(201).json({ 
+      success: true,
+      userId: result.insertId
+    });
+
   } catch (err) {
-    console.error('Error registrando usuario:', err);
-    res.status(500).json({ error: 'Error registrando usuario' });
+    console.error('Error en registro:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error en el servidor al registrar usuario' 
+    });
   }
 });
+// app.post('/api/auth/register', async (req, res) => {
+//   const { nombre, email, telefono, password } = req.body;
+//   try {
+//     const [exists] = await db.query('SELECT id FROM usuarios WHERE email = ? OR telefono = ?', [email, telefono]);
+//     if (exists.length > 0) {
+//       return res.status(400).json({ error: 'El correo o teléfono ya está registrado' });
+//     }
+
+//     const hashedPassword = await bcrypt.hash(password, 10);
+//     const [result] = await db.query('INSERT INTO usuarios (nombre, email, telefono, password) VALUES (?, ?, ?, ?)', [nombre, email, telefono, hashedPassword]);
+
+//     res.status(201).json({ success: true, userId: result.insertId });
+//   } catch (err) {
+//     console.error('Error registrando usuario:', err);
+//     res.status(500).json({ error: 'Error registrando usuario' });
+//   }
+// });
 
 // Login 
 app.post('/api/auth/login', async (req, res) => {
@@ -246,36 +304,34 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Error interno del servidor' });
 });
 
-const nodemailer = require('nodemailer');
-const crypto = require('crypto');
-
-// Configuración del transporte de correo
+// Configuración del transporte de correo para Gmail
 const transporter = nodemailer.createTransport({
-  host: 'sandbox.smtp.mailtrap.io',
-  port: 2525,
+  service: 'gmail',
   auth: {
-    user: 'c0e1d2df6dd3c7', // Reemplaza con tu user de Mailtrap
-    pass: 'bf6a757f17b92a' // Reemplaza con tu password de Mailtrap
+    user: 'pereitazegna@gmail.com',
+    pass: 'oiwjnsyjfyzusxvm'
+  },
+  tls: {
+    rejectUnauthorized: false // Solo para desarrollo, quitar en producción
   }
 });
 
-//const transporter = nodemailer.createTransport({
-//  service: 'gmail',
-//  auth: {
-//    user: 'pereitazegna@gmail.com',
-//    pass: 'uxrp rywr lbei nat'
-//  },
-//  tls: {
-//    rejectUnauthorized: false // Solo para desarrollo, quitar en producción
-//  }
-//});
 
 // Ruta para enviar código de verificación
 app.post('/api/auth/send-verification', async (req, res) => {
   const { email } = req.body;
   const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-  console.log(`Intentando enviar código a: ${email}`); // Log de diagnóstico
+  // Almacena el código con su fecha de expiración (15 minutos)
+  verificationCodes.set(email, {
+    code,
+    expiresAt: Date.now() + 15 * 60 * 1000
+  });
+
+  // Reinicia contador de intentos
+  verificationAttempts.set(email, 0);
+
+  console.log(`Código generado para ${email}: ${code}`); // Solo para desarrollo
 
   try {
     const mailOptions = {
@@ -283,29 +339,216 @@ app.post('/api/auth/send-verification', async (req, res) => {
       to: email,
       subject: 'Código de verificación',
       text: `Tu código es: ${code}`,
-      html: `<p>Tu código es: <strong>${code}</strong></p>`
+      html: `<p>Tu código es: <strong>${code}</strong></p>
+             <p>Este código expirará en 15 minutos.</p>`
     };
 
-    console.log('Opciones de correo:', mailOptions); // Log de diagnóstico
-
     const info = await transporter.sendMail(mailOptions);
-    console.log('Correo enviado:', info.response); // Log de confirmación
+    console.log('Correo enviado:', info.response);
 
-    res.json({ success: true, message: 'Código enviado' });
+    res.json({ 
+      success: true, 
+      message: 'Código enviado',
+      expiresIn: 15 * 60 // Tiempo en segundos
+    });
   } catch (err) {
-    console.error('Error detallado al enviar correo:', err); // Log detallado del error
+    console.error('Error al enviar correo:', err);
     res.status(500).json({ 
+      success: false,
       error: 'Error enviando código de verificación',
       details: err.message 
     });
   }
 });
 
+app.post('/api/auth/request-password-reset', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    // Buscar por email o teléfono
+    const [users] = await db.query(
+      'SELECT id, email FROM usuarios WHERE email = ? OR telefono = ?',
+      [email, email]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Usuario no encontrado con ese correo o teléfono'
+      });
+    }
+
+    const userEmail = users[0].email;
+
+    // Generar código de 6 dígitos
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Guardar código con expiración
+    verificationCodes.set(userEmail, {
+      code,
+      expiresAt: Date.now() + 15 * 60 * 1000
+    });
+
+    verificationAttempts.set(userEmail, 0); // Reiniciar intentos
+
+    // Configurar y enviar correo
+    const mailOptions = {
+      from: 'Producciones GH <no-reply@produccionesgh.com>',
+      to: userEmail,
+      subject: 'Código para restablecer tu contraseña',
+      html: `<p>Tu código para restablecer la contraseña es: 
+             <strong>${code}</strong></p>
+             <p>Este código expirará en 15 minutos.</p>`
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`Correo enviado a ${userEmail}:`, info.response);
+
+    res.json({
+      success: true,
+      message: 'Código enviado',
+      email: userEmail,
+      expiresIn: 15 * 60
+    });
+
+  } catch (error) {
+    console.error('Error en recuperación:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error interno al procesar la solicitud',
+      details: error.message
+    });
+  }
+});
+
+
+// Ruta para verificar código
+app.post('/api/auth/verify-code', (req, res) => {
+  const { email, code } = req.body;
+
+  const attempts = verificationAttempts.get(email) || 0;
+  if (attempts >= 5) {
+    return res.status(429).json({ 
+      success: false,
+      error: 'Demasiados intentos. Por favor solicita un nuevo código.' 
+    });
+  }
+
+  const record = verificationCodes.get(email);
+  if (!record) {
+    return res.status(400).json({ 
+      success: false,
+      error: 'No se encontró código para este email. Solicita uno nuevo.' 
+    });
+  }
+
+  if (Date.now() > record.expiresAt) {
+    verificationCodes.delete(email);
+    return res.status(400).json({ 
+      success: false,
+      error: 'El código ha expirado. Solicita uno nuevo.' 
+    });
+  }
+
+  if (record.code !== code) {
+    verificationAttempts.set(email, attempts + 1);
+    const remaining = 5 - (attempts + 1);
+    return res.status(400).json({ 
+      success: false,
+      error: `Código incorrecto. Te quedan ${remaining} intentos.` 
+    });
+  }
+
+  verificationCodes.delete(email);
+  verificationAttempts.delete(email);
+
+  res.json({ 
+    success: true,
+    message: 'Código verificado correctamente',
+    token: generarTokenTemporal(email) 
+  });
+});
+
+//Ruta reser-pass V1
+// app.post('/api/auth/reset-password', async (req, res) => {
+//   const { token, password } = req.body;
+
+//   try {
+//     const decoded = jwt.verify(token, TOKEN_TEMP_SECRET);
+//     const email = decoded.email;
+
+//     if (!password || typeof password !== 'string') {
+//       return res.status(400).json({ success: false, error: 'Contraseña inválida' });
+//     }
+
+//     const hashedPassword = await bcrypt.hash(password.toString(), 10);
+//     await db.query('UPDATE usuarios SET password = ? WHERE email = ?', [hashedPassword, email]);
+
+//     res.json({ success: true, message: 'Contraseña actualizada correctamente' });
+//   } catch (error) {
+//     console.error('Error al restablecer contraseña:', error);
+//     res.status(400).json({ 
+//       success: false,
+//       error: 'Token inválido o expirado. Solicita un nuevo código.' 
+//     });
+//   }
+//   });
+
+// app.post('/api/auth/verify-code', (req, res) => {
+//   const { email, code } = req.body;
+
+//   // Verificar intentos
+//   const attempts = verificationAttempts.get(email) || 0;
+//   if (attempts >= 5) {
+//     return res.status(429).json({ 
+//       success: false,
+//       error: 'Demasiados intentos. Por favor solicita un nuevo código.' 
+//     });
+//   }
+
+//   if (!verificationCodes.has(email)) {
+//     return res.status(400).json({ 
+//       success: false,
+//       error: 'No se encontró código para este email. Solicita uno nuevo.' 
+//     });
+//   }
+
+//   const record = verificationCodes.get(email);
+
+//   if (Date.now() > record.expiresAt) {
+//     verificationCodes.delete(email);
+//     return res.status(400).json({ 
+//       success: false,
+//       error: 'El código ha expirado. Solicita uno nuevo.' 
+//     });
+//   }
+
+//   if (record.code !== code) {
+//     verificationAttempts.set(email, attempts + 1);
+//     const remainingAttempts = 5 - (attempts + 1);
+//     return res.status(400).json({ 
+//       success: false,
+//       error: `Código incorrecto. Te quedan ${remainingAttempts} intentos.` 
+//     });
+//   }
+
+//   // Código válido
+//   verificationCodes.delete(email);
+//   verificationAttempts.delete(email);
+  
+//   res.json({ 
+//     success: true, 
+//     message: 'Código verificado correctamente',
+//     token: generarTokenTemporal(email) // Implementa esta función según tu sistema
+//   });
+// });
+
+// Ruta para test de correo (puedes mantenerla)
 app.get('/test-mail', async (req, res) => {
   try {
     const info = await transporter.sendMail({
       from: 'Test <test@produccionesgh.com>',
-      to: 'docko_519@outlook.com', // Cambia esto
+      to: 'docko_519@outlook.com',
       subject: 'Prueba de correo',
       text: 'Esto es una prueba'
     });
@@ -315,90 +558,104 @@ app.get('/test-mail', async (req, res) => {
   }
 });
 
-// Ruta para verificar código y registrar usuario
-app.post('/api/auth/verify-email', async (req, res) => {
-  const { nombre, email, telefono, password, code } = req.body;
-  
-  // Aquí deberías verificar el código contra la base de datos
-  // Por simplicidad, asumiremos que el código es correcto
-  
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const [result] = await db.query(
-      'INSERT INTO usuarios (nombre, email, telefono, password) VALUES (?, ?, ?, ?)',
-      [nombre, email, telefono, hashedPassword]
-    );
-    
-    res.json({ success: true, userId: result.insertId });
-  } catch (err) {
-    console.error('Error registrando usuario:', err);
-    res.status(500).json({ error: 'Error registrando usuario' });
-  }
-});
+// Función auxiliar para generar token temporal (ejemplo)
+function generarTokenTemporal(email) {
+  return jwt.sign({ email }, TOKEN_TEMP_SECRET, { expiresIn: '15m' });
+}
+
 
 // Ruta para solicitar recuperación de contraseña
 app.post('/api/auth/request-password-reset', async (req, res) => {
   const { email } = req.body;
-  
+
   try {
-    const [users] = await db.query('SELECT id FROM usuarios WHERE email = ?', [email]);
-    if (users.length === 0) {
-      return res.status(404).json({ error: 'Correo no encontrado' });
-    }
-    
-    const token = crypto.randomBytes(20).toString('hex');
-    const expires = new Date(Date.now() + 3600000); // 1 hora de expiración
-    
-    await db.query(
-      'UPDATE usuarios SET reset_token = ?, reset_token_expires = ? WHERE email = ?',
-      [token, expires, email]
+    const [users] = await db.query(
+      'SELECT id, email FROM usuarios WHERE email = ? OR telefono = ?',
+      [email, email]
     );
-    
-    const resetLink = `http://localhost:4200/reset-password?token=${token}`;
-    
-    await transporter.sendMail({
-      from: 'Producciones GH <tu_correo@gmail.com>',
-      to: email,
-      subject: 'Recuperación de contraseña',
-      html: `<p>Para restablecer tu contraseña, haz clic en el siguiente enlace:</p>
-             <a href="${resetLink}">${resetLink}</a>
-             <p>Este enlace expirará en 1 hora.</p>`
+
+    if (users.length === 0) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Usuario no encontrado con ese correo o teléfono'
+      });
+    }
+
+    const userEmail = users[0].email;
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    verificationCodes.set(userEmail, {
+      code,
+      expiresAt: Date.now() + 15 * 60 * 1000
     });
-    
-    res.json({ success: true, message: 'Correo de recuperación enviado' });
-  } catch (err) {
-    console.error('Error en recuperación de contraseña:', err);
-    res.status(500).json({ error: 'Error procesando la solicitud' });
+    verificationAttempts.set(userEmail, 0);
+
+    const mailOptions = {
+      from: 'Producciones GH <no-reply@produccionesgh.com>',
+      to: userEmail,
+      subject: 'Código para restablecer tu contraseña',
+      html: `<p>Tu código para restablecer la contraseña es: <strong>${code}</strong></p>
+             <p>Este código expirará en 15 minutos.</p>`
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`Correo enviado a ${userEmail}:`, info.response);
+
+    res.json({
+      success: true,
+      email: userEmail,
+      message: 'Código enviado',
+      expiresIn: 15 * 60
+    });
+  } catch (error) {
+    console.error('Error en recuperación:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error interno al procesar la solicitud',
+      details: error.message
+    });
   }
 });
 
 // Ruta para restablecer contraseña
 app.post('/api/auth/reset-password', async (req, res) => {
-  const { token, newPassword } = req.body;
-  
+  const { token, password } = req.body;
+
   try {
-    const [users] = await db.query(
-      'SELECT id FROM usuarios WHERE reset_token = ? AND reset_token_expires > NOW()',
-      [token]
-    );
-    
-    if (users.length === 0) {
-      return res.status(400).json({ error: 'Token inválido o expirado' });
+    if (!token || !password) {
+      return res.status(400).json({ success: false, error: 'Datos incompletos' });
     }
-    
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    
+
+    const decoded = jwt.verify(token, TOKEN_TEMP_SECRET);
+    const email = decoded.email;
+
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Token inválido' });
+    }
+
+    if (typeof password !== 'string' || password.trim().length < 6) {
+      return res.status(400).json({ success: false, error: 'Contraseña inválida o muy corta' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password.trim(), 10);
+
     await db.query(
-      'UPDATE usuarios SET password = ?, reset_token = NULL, reset_token_expires = NULL WHERE reset_token = ?',
-      [hashedPassword, token]
+      'UPDATE usuarios SET password = ? WHERE email = ?',
+      [hashedPassword, email]
     );
-    
-    res.json({ success: true, message: 'Contraseña actualizada' });
-  } catch (err) {
-    console.error('Error restableciendo contraseña:', err);
-    res.status(500).json({ error: 'Error restableciendo contraseña' });
+
+    res.json({ success: true, message: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    console.error('Error al restablecer contraseña:', error);
+    return res.status(400).json({
+      success: false,
+      error: 'Token inválido o expirado. Solicita un nuevo código.'
+    });
   }
 });
+
+
 
 // Ruta para obtener reservas de un usuario
 app.get('/api/reservas/usuario/:usuarioId', async (req, res) => {
@@ -899,6 +1156,62 @@ app.delete('/api/paquetes/:id', async (req, res) => {
   }
 });
 
+// Ruta para verificar código de email
+app.post('/api/auth/verify-email', (req, res) => {
+  const { email, code } = req.body;
+  console.log(`Verificando código para ${email}. Código recibido: ${code}`); // Debug
+
+  // Verificar intentos
+  const attempts = verificationAttempts.get(email) || 0;
+  if (attempts >= 5) {
+    return res.status(429).json({ 
+      success: false,
+      error: 'Demasiados intentos. Por favor solicita un nuevo código.' 
+    });
+  }
+
+  if (!verificationCodes.has(email)) {
+    console.log(`No se encontró código para ${email}`); // Debug
+    return res.status(400).json({ 
+      success: false,
+      error: 'No se encontró código para este email. Solicita uno nuevo.' 
+    });
+  }
+
+  const record = verificationCodes.get(email);
+  console.log(`Código almacenado para ${email}: ${record.code}`); // Debug
+  
+  // Verificar si el código ha expirado
+  if (Date.now() > record.expiresAt) {
+    verificationCodes.delete(email);
+    return res.status(400).json({ 
+      success: false,
+      error: 'El código ha expirado. Solicita uno nuevo.' 
+    });
+  }
+
+  // Verificar si el código coincide
+  if (record.code !== code) {
+    verificationAttempts.set(email, attempts + 1);
+    const remainingAttempts = 5 - (attempts + 1);
+    console.log(`Código incorrecto para ${email}. Intentos restantes: ${remainingAttempts}`); // Debug
+    return res.status(400).json({ 
+      success: false,
+      error: `Código incorrecto. Te quedan ${remainingAttempts} intentos.` 
+    });
+  }
+
+  // Código válido
+  verificationCodes.delete(email);
+  verificationAttempts.delete(email);
+  console.log(`Código verificado correctamente para ${email}`); // Debug
+  
+  res.json({ 
+    success: true, 
+    message: 'Código verificado correctamente',
+    token: generarTokenTemporal(email)
+  });
+});
 
 
 // Iniciar servidor

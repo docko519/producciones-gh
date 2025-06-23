@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../auth/auth.service';
+import { FullCalendarComponent } from 'src/app/full-calendar/full-calendar.component';
 
 @Component({
   selector: 'app-administradores',
@@ -8,6 +9,11 @@ import { AuthService } from '../../auth/auth.service';
 })
 export class AdministradoresComponent implements OnInit {
   administradores: any[] = [];
+  loading = false;
+  prepararEnlace(admin: any): string {
+  // Devuelve el enlace deseado, por ejemplo:
+  return `/admin/editar/${admin.id}`;
+}
 
   constructor(private authService: AuthService) { }
 

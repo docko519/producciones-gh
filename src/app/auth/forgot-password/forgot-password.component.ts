@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { AuthService } from '../auth.service';
 import { Router } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-forgot-password',
@@ -8,21 +9,34 @@ import { Router } from '@angular/router';
   styleUrls: ['./forgot-password.component.css']
 })
 export class ForgotPasswordComponent {
-  email = '';
+  emailOrPhone = '';
   message = '';
   error = '';
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService, 
+    private router: Router,
+    private snackBar: MatSnackBar
+  ) {}
 
   requestReset(): void {
-    this.authService.requestPasswordReset(this.email).subscribe({
-      next: () => {
-        this.message = 'Se ha enviado un enlace de recuperación a tu correo electrónico.';
+    this.authService.requestPasswordReset(this.emailOrPhone).subscribe({
+      next: (response) => {
+        this.message = `Hemos enviado un código de verificación a ${response.email}`;
         this.error = '';
+        this.snackBar.open('Código enviado al correo', 'Cerrar', { duration: 5000 });
+
+        // Redirigir al reset-password con email
+        this.router.navigate(['/reset-password'], {
+          queryParams: {
+            email: response.email
+          }
+        });
       },
       error: (err) => {
-        this.error = 'Error al enviar el enlace de recuperación. Por favor intenta nuevamente.';
+        this.error = err.error?.error || 'Error al enviar el código. Intenta nuevamente.';
         this.message = '';
+        this.snackBar.open(this.error, 'Cerrar', { duration: 5000 });
       }
     });
   }

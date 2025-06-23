@@ -18,6 +18,9 @@ import { ContratoComponent } from './contrato/contrato.component';
 import { PaquetesComponent } from './paquetes/paquetes.component';
 import { GaleriaComponent } from './galeria/galeria.component';
 import { RouterModule } from '@angular/router';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+
+
 
 @NgModule({
   declarations: [
@@ -37,7 +40,8 @@ import { RouterModule } from '@angular/router';
     
     BrowserModule,       // Siempre primero (contiene CommonModule)
     HttpClientModule, // Segundo
-    BrowserAnimationsModule,    
+    BrowserAnimationsModule, 
+    MatSnackBarModule,   
     AppRoutingModule,    // Contiene RouterModule, NO necesitas importarlo por separado
     AuthModule,
     RouterModule.forRoot([])

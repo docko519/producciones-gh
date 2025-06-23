@@ -2,6 +2,7 @@
   <h2>Registro</h2>
   
   <div *ngIf="!verificationSent">
+
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
       <!-- Campos del formulario existentes -->
       <div class="form-group">
@@ -80,3 +81,4 @@
     <p>¿Ya tienes una cuenta? <a routerLink="/login">Inicia sesión aquí</a></p>
   </div>
 </div>
+
