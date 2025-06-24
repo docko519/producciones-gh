@@ -4,9 +4,12 @@
   </div>
   
   <div class="nav-links">
+    <button (click)="toggleDarkMode()">🌙/☀️</button>
     <a routerLink="/informacion">Información</a>
     <a routerLink="/paquetes">Paquetes</a>
     <a routerLink="/galeria">Galería</a>
+    
+
     
     <div *ngIf="authService.isAuthenticated()" class="user-section">
       <a routerLink="/calendario" *ngIf="!authService.isAdmin()">Calendario</a>

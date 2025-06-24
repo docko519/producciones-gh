@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit} from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 
@@ -7,8 +7,16 @@ import { AuthService } from '../auth/auth.service';
   templateUrl: './menu-superior.component.html',
   styleUrls: ['./menu-superior.component.css']
 })
-export class MenuSuperiorComponent {
+export class MenuSuperiorComponent implements OnInit {
 
+  ngOnInit() {
+    const modoOscuro = localStorage.getItem('modoOscuro') === 'true';
+    if (modoOscuro) document.body.classList.add('dark-mode');
+  }
+    toggleDarkMode() {
+    const isDark = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('modoOscuro', isDark.toString());
+  }
   constructor(public authService: AuthService, private router: Router) { } // Cambia `private` a `public`
 
   // Método para cerrar sesión

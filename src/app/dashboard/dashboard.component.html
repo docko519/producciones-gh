@@ -24,10 +24,34 @@
         <button *ngIf="reserva.estado === 'pendiente'" (click)="cancelarReserva(reserva.id)" class="btn-cancelar">
           Cancelar Reserva
         </button>
-        <button *ngIf="reserva.estado === 'confirmada'" disabled class="btn-pagar">
-          Pagar Saldo (${{ reserva.precio * 0.5 | number:'1.2-2' }})
+        <button *ngIf="reserva.estado === 'confirmada'" (click)="abrirModalPago(reserva)" class="btn-pagar">
+        Pagar Saldo (${{ calcularSaldo(reserva) | number:'1.2-2' }})
         </button>
       </div>
     </div>
   </div>
+  <!-- Modal -->
+<div *ngIf="mostrarModal" class="modal-pago">
+  <div class="modal-contenido">
+    <h3>Métodos de Pago</h3>
+    
+    <p><strong>PayPal:</strong></p>
+    <a [href]="paypalLink" target="_blank">{{ paypalLink }}</a>
+
+    <p><strong>Transferencia Bancaria:</strong></p>
+    <ul>
+      <li>Nombre: Arturo Perea</li>
+      <li>CLABE: 138580000008058899</li>
+      <li>Banco: Ualá</li>
+    </ul>
+
+    <p><strong>Enviar comprobante por WhatsApp:</strong></p>
+    <a [href]="getWhatsAppLink('7292543206')" target="_blank" class="whatsapp-btn">Enviar a DOCKO DJ</a><br/>
+    <a [href]="getWhatsAppLink('7225946264')" target="_blank" class="whatsapp-btn">Enviar a DJ JOU</a>
+
+    <br/>
+    <button (click)="cerrarModalPago()" class="btn-cancelar">Cerrar</button>
+  </div>
+</div>
+
 </div>

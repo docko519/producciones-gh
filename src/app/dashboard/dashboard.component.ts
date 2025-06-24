@@ -48,4 +48,28 @@ export class DashboardComponent implements OnInit {
       });
     }
   }
+
+mostrarModal: boolean = false;
+reservaSeleccionada: any = null;
+
+paypalLink: string = 'https://paypal.me/ArturoPerea519?country.x=MX&locale.x=es_XC';
+
+abrirModalPago(reserva: any): void {
+  this.reservaSeleccionada = reserva;
+  this.mostrarModal = true;
+}
+
+cerrarModalPago(): void {
+  this.mostrarModal = false;
+}
+
+calcularSaldo(reserva: any): number {
+  return reserva.precio - (reserva.precio * 0.5);
+}
+
+getWhatsAppLink(telefono: string): string {
+  const mensaje = `Hola, ya realicé el pago del saldo de mi reserva '${this.reservaSeleccionada?.paquete_nombre}' para el ${this.reservaSeleccionada?.fecha}. Adjunto comprobante.`;
+  return `https://wa.me/52${telefono}?text=${encodeURIComponent(mensaje)}`;
+}
+
 }
