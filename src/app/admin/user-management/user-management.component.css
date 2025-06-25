@@ -1,5 +1,7 @@
 .container {
   padding: 20px;
+  background-color: var(--color-card);
+  color: var(--color-texto);
 }
 
 .table-container {

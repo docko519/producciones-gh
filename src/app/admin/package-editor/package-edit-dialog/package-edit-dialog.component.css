@@ -11,4 +11,6 @@ mat-dialog-actions {
 textarea {
   resize: vertical;
   min-height: 100px;
+  background-color: var(--color-card);
+  color: var(--color-texto);
 }

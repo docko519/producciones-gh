@@ -79,7 +79,7 @@ export class ReservaComponent implements OnInit {
         this.authService.crearReserva(reservaData).pipe(take(1))
       );
 
-      alert(`¡Reserva creada correctamente!\nID: ${response.reservaId}`);
+      alert(`¡Reserva creada correctamente! `);
       this.calendarService.notifyCalendarUpdate();
       this.router.navigate(['/dashboard']);
     } catch (error: any) {

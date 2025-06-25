@@ -1,16 +1,18 @@
-/* pie-pagina.component.css */
 footer {
-  background-color: #D4AF37; /* Dorado */
+  background-color: var(--color-primario); /* Dorado */
   color: white;
-  padding: 20px;
+  padding: 20px 10px;
   text-align: center;
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  width: 100%;
+  z-index: 10;
 }
 
 footer h4 {
   margin-bottom: 10px;
   font-size: 18px;
-  color: #ffffff; /* Cambiamos el color del nombre a blanco */
+  color: #ffffff;
 }
 
 footer a {
@@ -21,14 +23,25 @@ footer a {
 footer img {
   width: 30px;
   height: 30px;
-  transition: transform 0.3s ease; /* Efecto de hover */
+  transition: transform 0.3s ease;
 }
 
 footer img:hover {
-  transform: scale(1.2); /* Escala los íconos al hacer hover */
+  transform: scale(1.2);
 }
 
-/* Estilos responsivos */
+/* Asegura que no quede espacio debajo */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+:host {
+  display: block;
+  height: 100%;
+}
+
 @media (max-width: 768px) {
   footer {
     padding: 15px;

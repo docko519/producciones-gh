@@ -19,10 +19,34 @@ import { CommonModule } from '@angular/common'; // Para pipes comunes
     </div>
   `,
   styles: [`
-    .admin-container { display: flex; min-height: 100vh; }
-    .admin-nav { width: 200px; background: #f8f9fa; padding: 20px; }
-    .admin-content { flex: 1; padding: 20px; }
-    .active { font-weight: bold; color: #007bff; }
-  `]
+  .admin-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+  }
+  .admin-nav {
+    width: 200px;
+    background: var(--color-card);
+    padding: 20px;
+    border-right: 2px solid #ddd;
+  }
+  .admin-content {
+    flex: 1;
+    padding: 20px;
+  }
+  .admin-nav a {
+    display: block;
+    margin-bottom: 15px;
+    color: var(--color-texto);
+    text-decoration: none;
+  }
+  .admin-nav a.active {
+    font-weight: bold;
+    color: var(--color-primario);
+  }
+`]
+
+
 })
 export class LayoutComponent {}

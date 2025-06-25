@@ -1,9 +1,17 @@
 .full-width {
   width: 100%;
   margin-bottom: 16px;
+  color: var(--color-texto);
 }
 
 mat-dialog-actions {
   justify-content: flex-end;
   padding: 16px 0;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+  background-color: var(--color-card);
+  color: var(--color-texto);
 }

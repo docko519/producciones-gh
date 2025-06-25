@@ -1,5 +1,7 @@
 .container {
   padding: 20px;
+  background-color: var(--color-card);
+  color: var(--color-texto);
 }
 
 .header-actions {
@@ -34,7 +36,7 @@
   justify-content: center;
   padding: 40px;
   text-align: center;
-  color: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .no-data mat-icon {

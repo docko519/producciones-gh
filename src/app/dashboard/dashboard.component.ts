@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../auth/auth.service';
 import { Router } from '@angular/router';
+import { DatePipe } from '@angular/common';
+
 
 @Component({
   selector: 'app-dashboard',
@@ -11,7 +13,12 @@ export class DashboardComponent implements OnInit {
   reservas: any[] = [];
   usuario: any = null;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+  private datePipe: DatePipe,
+  private authService: AuthService,
+  private router: Router
+) {}
+
 
   ngOnInit(): void {
     this.usuario = this.authService.getCurrentUser();
@@ -68,8 +75,22 @@ calcularSaldo(reserva: any): number {
 }
 
 getWhatsAppLink(telefono: string): string {
-  const mensaje = `Hola, ya realicé el pago del saldo de mi reserva '${this.reservaSeleccionada?.paquete_nombre}' para el ${this.reservaSeleccionada?.fecha}. Adjunto comprobante.`;
+  if (!this.reservaSeleccionada) return '';
+
+  const fechaFormateada = this.datePipe.transform(this.reservaSeleccionada.fecha, 'dd/MM/yyyy', 'es-MX');
+  const usuario = this.usuario?.nombre || 'cliente';
+
+  const mensaje = `Hola, soy ${usuario}, ya realicé el pago del anticipo de mi reserva '${this.reservaSeleccionada.paquete_nombre}' para el ${fechaFormateada}. Envío el comprobante.`;
+
   return `https://wa.me/52${telefono}?text=${encodeURIComponent(mensaje)}`;
 }
+
+
+
+
+//  getWhatsAppLink(telefono: string): string {
+//    const mensaje = `Hola, ya realicé el pago del anticipo de mi reserva '${this.reservaSeleccionada?.paquete_nombre}' para el ${this.reservaSeleccionada?.fecha}. Envio el comprobante.`;
+//    return `https://wa.me/52${telefono}?text=${encodeURIComponent(mensaje)}`;
+//  }
 
 }

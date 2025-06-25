@@ -5,6 +5,7 @@ import { AppRoutingModule } from './app-routing.module'; // Este ya incluye Rout
 import { AppComponent } from './app.component';
 import { AuthModule } from './auth/auth.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { DatePipe } from '@angular/common';
 
 // Componentes
 import { DashboardComponent } from './dashboard/dashboard.component';
@@ -46,7 +47,7 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
     AuthModule,
     RouterModule.forRoot([])
   ],
-  providers: [],
+  providers: [DatePipe],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

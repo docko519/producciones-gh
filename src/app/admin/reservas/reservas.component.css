@@ -1,28 +1,10 @@
-tr.confirmada {
-    background-color: #d4edda; /* verde claro */
-  }
-  tr.pendiente {
-    background-color: #fff3cd; /* amarillo claro */
-  }
-  tr.cancelada {
-    background-color: #f8d7da; /* rojo claro */
-  }
-  tr.rechazada {
-    background-color: #e2e3f3; /* morado claro */
-  }
-  
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  td, th {
-    padding: 8px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  select {
-    padding: 4px;
-  }
-  
+tr.confirmada { background-color: #d4edda; }
+tr.pendiente { background-color: #fff3cd; }
+tr.cancelada { background-color: #f8d7da; }
+tr.rechazada { background-color: #e2e3f3; }
+
+table {
+  width: 100%;
+  background-color: var(--color-card);
+  color: var(--color-texto);
+}
