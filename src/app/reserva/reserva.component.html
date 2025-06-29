@@ -1,46 +1,49 @@
 <div class="reserva-container">
-  <h2>Reserva para el {{fechaSeleccionada | date:'fullDate'}}</h2>
-  
+  <h2>Reserva para el {{ fechaSeleccionada | date: 'fullDate' }}</h2>
+
+  <!-- Selección de paquete -->
   <div *ngIf="!mostrarConfirmacion">
     <h3>Selecciona un paquete:</h3>
-    
+
     <div class="paquetes-list">
-      <div *ngFor="let paquete of paquetes" 
-           class="paquete-card" 
-           [class.selected]="paqueteSeleccionado?.id === paquete.id"
-           (click)="seleccionarPaquete(paquete)">
-        <h4>{{paquete.nombre}} - ${{paquete.precio | number:'1.2-2'}}</h4>
-        <p>{{paquete.descripcion}}</p>
+      <div 
+        *ngFor="let paquete of paquetes"
+        class="paquete-card"
+        [class.selected]="paqueteSeleccionado?.id === paquete.id"
+        (click)="seleccionarPaquete(paquete)">
+        <h4>{{ paquete.nombre }} - ${{ paquete.precio | number: '1.2-2' }}</h4>
+        <p>{{ paquete.descripcion }}</p>
       </div>
     </div>
-    
+
     <div class="actions" *ngIf="paqueteSeleccionado">
-      <button (click)="confirmarReserva()">Continuar con la reserva</button>
+      <button class="btn-continuar" (click)="confirmarReserva()">Continuar con la reserva</button>
     </div>
   </div>
-  
+
+  <!-- Confirmación -->
   <div *ngIf="mostrarConfirmacion" class="confirmacion-container">
     <h3>Confirmación de Reserva</h3>
-    
+
     <div class="resumen">
-      <p><strong>Fecha:</strong> {{fechaSeleccionada | date:'fullDate'}}</p>
-      <p><strong>Paquete:</strong> {{paqueteSeleccionado.nombre}} - ${{paqueteSeleccionado.precio | number:'1.2-2'}}</p>
-      <p><strong>Cliente:</strong> {{usuario.nombre}}</p>
-      <p><strong>Teléfono:</strong> {{usuario.telefono}}</p>
+      <p><strong>Fecha:</strong> {{ fechaSeleccionada | date: 'fullDate' }}</p>
+      <p><strong>Paquete:</strong> {{ paqueteSeleccionado.nombre }} - ${{ paqueteSeleccionado.precio | number: '1.2-2' }}</p>
+      <p><strong>Cliente:</strong> {{ usuario.nombre }}</p>
+      <p><strong>Teléfono:</strong> {{ usuario.telefono }}</p>
     </div>
-    
+
     <div class="terminos">
       <h4>Términos y condiciones:</h4>
       <ul>
-        <li>Se requiere un depósito del 50% para confirmar la reserva</li>
-        <li>El saldo restante debe pagarse el día del evento</li>
-        <li>En caso de cancelación, el depósito no es reembolsable</li>
+        <li>Se requiere un depósito del 50% para confirmar la reserva.</li>
+        <li>El saldo restante debe pagarse el día del evento.</li>
+        <li>En caso de cancelación, el depósito no es reembolsable.</li>
       </ul>
     </div>
-    
+
     <div class="actions">
-      <button class="confirmar" (click)="finalizarReserva()">Confirmar Reserva</button>
-      <button class="cancelar" (click)="cancelarReserva()">Cancelar</button>
+      <button class="btn-confirmar" (click)="finalizarReserva()">Confirmar Reserva</button>
+      <button class="btn-cancelar" (click)="cancelarReserva()">Cancelar</button>
     </div>
   </div>
 </div>

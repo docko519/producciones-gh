@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { LOCALE_ID, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module'; // Este ya incluye RouterModule
@@ -6,6 +6,10 @@ import { AppComponent } from './app.component';
 import { AuthModule } from './auth/auth.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { DatePipe } from '@angular/common';
+import { registerLocaleData } from '@angular/common';
+import localeEs from '@angular/common/locales/es';
+
+
 
 // Componentes
 import { DashboardComponent } from './dashboard/dashboard.component';
@@ -21,8 +25,7 @@ import { GaleriaComponent } from './galeria/galeria.component';
 import { RouterModule } from '@angular/router';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 
-
-
+registerLocaleData(localeEs);
 @NgModule({
   declarations: [
     AppComponent,
@@ -47,7 +50,9 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
     AuthModule,
     RouterModule.forRoot([])
   ],
-  providers: [DatePipe],
+  providers: [DatePipe,
+    { provide: LOCALE_ID, useValue: 'es' }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

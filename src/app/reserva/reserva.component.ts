@@ -72,14 +72,17 @@ export class ReservaComponent implements OnInit {
       const reservaData = {
         usuario_id: this.usuario.id,
         fecha: this.fechaSeleccionada,
-        paquete_id: this.paqueteSeleccionado.id
+        paquete_id: this.paqueteSeleccionado.id,
+        usuario_nombre: this.usuario.nombre,
+        usuario_email: this.usuario.email,
+        paquete_nombre: this.paqueteSeleccionado.nombre
       };
 
       const response = await lastValueFrom(
         this.authService.crearReserva(reservaData).pipe(take(1))
       );
 
-      alert(`¡Reserva creada correctamente! `);
+      alert('¡Reserva creada correctamente!');
       this.calendarService.notifyCalendarUpdate();
       this.router.navigate(['/dashboard']);
     } catch (error: any) {

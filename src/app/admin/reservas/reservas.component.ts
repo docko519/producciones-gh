@@ -33,7 +33,8 @@
 
 import { Component, OnInit } from '@angular/core';
 import { AuthAdminService } from '../auth-admin.service';
-import { FullCalendarComponent } from 'src/app/full-calendar/full-calendar.component';
+import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-reservas',
@@ -42,9 +43,13 @@ import { FullCalendarComponent } from 'src/app/full-calendar/full-calendar.compo
 })
 export class ReservasComponent implements OnInit {
   reservas: any[] = [];
-  estados = ['pendiente', 'confirmada', 'cancelada']; 
+  estados = ['pendiente', 'confirmada', 'cancelada'];
 
-  constructor(private adminService: AuthAdminService) {}
+  constructor(
+    private adminService: AuthAdminService,
+    private http: HttpClient,
+    private snackBar: MatSnackBar
+  ) {}
 
   ngOnInit(): void {
     this.loadReservas();
@@ -58,9 +63,26 @@ export class ReservasComponent implements OnInit {
   }
 
   updateEstado(id: number, estado: string): void {
-    this.adminService.updateReserva(id, estado).subscribe({
-      next: () => this.loadReservas(),
-      error: (err) => console.error('Error al actualizar estado:', err)
+    const reserva = this.reservas.find(r => r.id === id);
+    if (!reserva) return;
+
+    const datos = {
+      estado,
+      email: reserva.email,
+      nombre: reserva.cliente,
+      paquete: reserva.paquete,
+      fecha: reserva.fecha
+    };
+
+    this.http.put(`http://localhost:3000/api/admin/reservas/${id}`, datos).subscribe({
+      next: () => {
+        this.snackBar.open(`Estado actualizado a ${estado}`, 'Cerrar', { duration: 3000 });
+        this.loadReservas();
+      },
+      error: (err) => {
+        console.error('Error al actualizar estado:', err);
+        this.snackBar.open('Error al actualizar estado', 'Cerrar', { duration: 3000 });
+      }
     });
   }
 

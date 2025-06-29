@@ -25,3 +25,72 @@
 .fc-day-today {
   background-color: rgba(255, 220, 40, 0.15);
 }
+
+.calendar-instrucciones {
+  max-width: 900px;
+  margin: 10px auto 20px auto;
+  padding: 12px 16px;
+  background-color: var(--color-card);
+  color: var(--color-texto);
+  border-left: 4px solid #D4AF37;
+  border-radius: 8px;
+  font-size: 15px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-instrucciones .verde {
+  font-weight: bold;
+  color: rgb(55, 128, 6);
+}
+
+.calendar-instrucciones .rojo {
+  font-weight: bold;
+  color: rgb(255, 0, 0);
+}
+.calendar-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  padding: 20px 40px;
+  background-color: var(--color-fondo, #fff);
+  color: var(--color-texto);
+  flex-wrap: nowrap;
+  max-width: 1200px;
+  margin: 0 auto; 
+  box-sizing: border-box;
+}
+
+.calendar-instrucciones {
+  width: 240px;
+  background-color: var(--color-card);
+  color: var(--color-texto);
+  padding: 16px;
+  border-left: 4px solid #D4AF37;
+  border-radius: 8px;
+  font-size: 15px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.calendar-instrucciones .verde {
+  font-weight: bold;
+  color: rgb(55, 128, 6);
+}
+
+.calendar-instrucciones .rojo {
+  font-weight: bold;
+  color: rgb(255, 0, 0);
+}
+
+.calendar-container {
+  flex-grow: 1;
+  min-width: 600px;
+  max-width: 900px;
+}
+
+#calendar {
+  width: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--color-texto);
+}

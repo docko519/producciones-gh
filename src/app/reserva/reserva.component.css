@@ -1,21 +1,80 @@
 .reserva-container {
   max-width: 800px;
-  margin: 20px auto;
-  padding: 20px;
+  margin: 30px auto;
+  padding: 25px;
   background-color: var(--color-card);
   border-radius: 10px;
   color: var(--color-texto);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.paquetes-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.paquete-card {
+  flex: 1 1 250px;
+  background-color: var(--color-card);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 15px;
+  cursor: pointer;
+  transition: border-color 0.3s, background-color 0.3s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 .paquete-card.selected {
-  border: 2px solid #D4AF37;
-  background-color: #fffaf0;
+  border-color: var(--color-primario);
+  background-color: rgba(212, 175, 55, 0.08);
 }
 
 .confirmacion-container {
-  background-color: #fffaf0;
-  border: 1px solid #D4AF37;
-  border-radius: 8px;
+  margin-top: 25px;
+  padding: 20px;
+  background-color: rgba(212, 175, 55, 0.05);
+  border: 1px solid var(--color-primario);
+  border-radius: 10px;
+}
+
+.terminos ul {
+  padding-left: 20px;
+  list-style-type: disc;
+}
+
+.actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.actions button {
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  border: none;
+}
+
+button.confirmar {
+  background-color: var(--color-primario);
+  color: white;
+}
+
+button.cancelar {
+  background-color: #cccccc;
+  color: #000;
+}
+
+button.confirmar:hover {
+  background-color: #c9a227;
+}
+
+button.cancelar:hover {
+  background-color: #bbb;
 }
 
 .modal-pago {
@@ -25,4 +84,8 @@
 .modal-contenido {
   background-color: var(--color-card);
   color: var(--color-texto);
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  margin: auto;
 }

@@ -56,17 +56,18 @@ app.post('/api/auth/register', async (req, res) => {
   console.log('Datos de registro recibidos:', req.body); // Debug
 
   try {
-    // 1. Verificar el token primero
+    // ✅ Usa la misma clave que al generar el token
     try {
-      jwt.verify(verificationToken, 'secreto_temporal');
+      jwt.verify(verificationToken, TOKEN_TEMP_SECRET);
     } catch (tokenError) {
+      console.error('❌ Token inválido o expirado:', tokenError.message);
       return res.status(400).json({ 
         success: false,
         error: 'Token de verificación inválido o expirado' 
       });
     }
 
-    // 2. Verificar si el usuario ya existe
+    // Verificar si el usuario ya existe
     const [exists] = await db.query(
       'SELECT id FROM usuarios WHERE email = ? OR telefono = ?', 
       [email, telefono]
@@ -79,10 +80,8 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
 
-    // 3. Hash de la contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4. Crear usuario
     const [result] = await db.query(
       'INSERT INTO usuarios (nombre, email, telefono, password) VALUES (?, ?, ?, ?)',
       [nombre, email, telefono, hashedPassword]
@@ -101,6 +100,10 @@ app.post('/api/auth/register', async (req, res) => {
     });
   }
 });
+
+
+
+
 // app.post('/api/auth/register', async (req, res) => {
 //   const { nombre, email, telefono, password } = req.body;
 //   try {
@@ -270,11 +273,17 @@ app.post('/api/reservas', async (req, res) => {
     connection = await db.getConnection();
     await connection.beginTransaction();
 
-    const [fechas] = await connection.query('SELECT id, disponible FROM fechas WHERE fecha = ? FOR UPDATE', [fecha]);
+    const [fechas] = await connection.query(
+      'SELECT id, disponible FROM fechas WHERE fecha = ? FOR UPDATE',
+      [fecha]
+    );
 
     let fecha_id;
     if (fechas.length === 0) {
-      const [insert] = await connection.query('INSERT INTO fechas (fecha, disponible) VALUES (?, FALSE)', [fecha]);
+      const [insert] = await connection.query(
+        'INSERT INTO fechas (fecha, disponible) VALUES (?, FALSE)',
+        [fecha]
+      );
       fecha_id = insert.insertId;
     } else {
       fecha_id = fechas[0].id;
@@ -284,19 +293,63 @@ app.post('/api/reservas', async (req, res) => {
       }
     }
 
-    await connection.query('INSERT INTO reservas (usuario_id, fecha_id, paquete_id, estado) VALUES (?, ?, ?, "pendiente")', [usuario_id, fecha_id, paquete_id]);
-    await connection.query('UPDATE fechas SET disponible = FALSE WHERE id = ?', [fecha_id]);
+    await connection.query(
+      'INSERT INTO reservas (usuario_id, fecha_id, paquete_id, estado) VALUES (?, ?, ?, "pendiente")',
+      [usuario_id, fecha_id, paquete_id]
+    );
 
+    await connection.query('UPDATE fechas SET disponible = FALSE WHERE id = ?', [fecha_id]);
     await connection.commit();
+
+    // Obtener info adicional
+    const [[usuario]] = await db.query(
+      'SELECT nombre, telefono FROM usuarios WHERE id = ?',
+      [usuario_id]
+    );
+    const [[paquete]] = await db.query(
+      'SELECT nombre, precio FROM paquetes WHERE id = ?',
+      [paquete_id]
+    );
+
+    const [yyyy, mm, dd] = fecha.split('T')[0].split('-');
+    const fechaFormateada = `${dd}/${mm}/${yyyy}`;
+
+    // Correo al administrador
+    const mailOptions = {
+      from: 'Producciones GH <no-reply@produccionesgh.com>',
+      to: 'produccionesgh1117@gmail.com', // dirección del administrador
+      subject: 'Nueva reserva recibida',
+      html: `
+        <h3>Se ha registrado una nueva reserva</h3>
+        <p><strong>Cliente:</strong> ${usuario.nombre}</p>
+        <p><strong>Teléfono:</strong> ${usuario.telefono}</p>
+        <p><strong>Paquete:</strong> ${paquete.nombre} - $${paquete.precio.toLocaleString('es-MX')}</p>
+        <p><strong>Fecha del evento:</strong> ${fechaFormateada}</p>
+      `
+    };
+
+    try {
+      const resultado = await transporter.sendMail(mailOptions);
+      console.log('📧 Correo enviado al administrador:', resultado.response);
+    } catch (errorCorreo) {
+      console.error('❌ Error al enviar correo al administrador:', errorCorreo.message);
+      // No afecta a la creación de la reserva
+    }
+
     res.status(201).json({ success: true, fecha_id });
+
   } catch (err) {
     if (connection) await connection.rollback();
-    console.error('Error en reserva:', err);
+    console.error('❌ Error en reserva:', err);
     res.status(500).json({ error: 'Error procesando reserva', details: err.message });
   } finally {
     if (connection) connection.release();
   }
 });
+
+
+
+
 
 // Error Handler Global
 app.use((err, req, res, next) => {
@@ -338,7 +391,7 @@ app.post('/api/auth/send-verification', async (req, res) => {
       from: 'Producciones GH <no-reply@produccionesgh.com>',
       to: email,
       subject: 'Código de verificación',
-      text: `Tu código es: ${code}`,
+      text: `Tu código para completar tu registro es: ${code}`,
       html: `<p>Tu código es: <strong>${code}</strong></p>
              <p>Este código expirará en 15 minutos.</p>`
     };
@@ -679,30 +732,61 @@ app.get('/api/reservas/usuario/:usuarioId', async (req, res) => {
 // Ruta para cancelar reserva
 app.put('/api/reservas/:id/cancelar', async (req, res) => {
   try {
-    const [reserva] = await db.query(`
-      SELECT r.estado, f.fecha, f.id as fecha_id
+    // 1. Obtener información completa de la reserva
+    const [[reserva]] = await db.query(`
+      SELECT r.estado, f.fecha, f.id as fecha_id,
+             u.nombre AS usuario_nombre, u.telefono,
+             p.nombre AS paquete_nombre
       FROM reservas r
       JOIN fechas f ON r.fecha_id = f.id
+      JOIN usuarios u ON r.usuario_id = u.id
+      JOIN paquetes p ON r.paquete_id = p.id
       WHERE r.id = ?
     `, [req.params.id]);
-    
-    if (reserva.length === 0) {
+
+    if (!reserva) {
       return res.status(404).json({ error: 'Reserva no encontrada' });
     }
-    
-    if (reserva[0].estado !== 'pendiente') {
+
+    if (reserva.estado !== 'pendiente') {
       return res.status(400).json({ error: 'Solo se pueden cancelar reservas pendientes' });
     }
-    
+
+    // 2. Cancelar y liberar fecha
     await db.query('UPDATE reservas SET estado = "cancelada" WHERE id = ?', [req.params.id]);
-    await db.query('UPDATE fechas SET disponible = TRUE WHERE id = ?', [reserva[0].fecha_id]);
-    
-    res.json({ success: true });
+    await db.query('UPDATE fechas SET disponible = TRUE WHERE id = ?', [reserva.fecha_id]);
+
+    // 3. Formatear la fecha
+    const fechaStr = new Date(reserva.fecha).toISOString().split('T')[0]; // 'YYYY-MM-DD'
+    const [yyyy, mm, dd] = fechaStr.split('-');
+    const fechaFormateada = `${dd}/${mm}/${yyyy}`;
+
+
+    // 4. Enviar notificación al admin
+    const mailOptions = {
+      from: 'Producciones GH <no-reply@produccionesgh.com>',
+      to: 'produccionesgh1117@gmail.com',
+      subject: 'Reserva cancelada por el cliente',
+      html: `
+        <h3>Un usuario ha cancelado su reserva</h3>
+        <p><strong>Cliente:</strong> ${reserva.usuario_nombre}</p>
+        <p><strong>Teléfono:</strong> ${reserva.telefono}</p>
+        <p><strong>Paquete:</strong> ${reserva.paquete_nombre}</p>
+        <p><strong>Fecha del evento:</strong> ${fechaFormateada}</p>
+        <p>La fecha se encuentra disponible para reservar de nuevo.</p>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({ success: true, message: 'Reserva cancelada y notificación enviada' });
+
   } catch (err) {
     console.error('Error cancelando reserva:', err);
     res.status(500).json({ error: 'Error cancelando reserva' });
   }
 });
+
 
 //------------------------ADMIN--------------------//
 // Middleware para verificar admin
@@ -763,15 +847,78 @@ app.get('/api/admin/reservas', isAdmin, async (req, res) => {
 });
 
 // Actualizar estado de reserva (para admin)
+const { format } = require('date-fns');
+const { es } = require('date-fns/locale');
+
 app.put('/api/admin/reservas/:id', isAdmin, async (req, res) => {
   const { estado } = req.body;
+  const reservaId = req.params.id;
+
   try {
-    await db.query('UPDATE reservas SET estado = ? WHERE id = ?', [estado, req.params.id]);
+    // Actualizar el estado de la reserva
+    await db.query('UPDATE reservas SET estado = ? WHERE id = ?', [estado, reservaId]);
+
+    // Obtener información del usuario, paquete y fecha
+    const [[info]] = await db.query(`
+      SELECT u.email, u.nombre AS usuario_nombre, u.telefono,
+             p.nombre AS paquete_nombre, p.precio,
+             f.fecha
+      FROM reservas r
+      JOIN usuarios u ON r.usuario_id = u.id
+      JOIN paquetes p ON r.paquete_id = p.id
+      JOIN fechas f ON r.fecha_id = f.id
+      WHERE r.id = ?
+    `, [reservaId]);
+
+    if (!info || !info.email) {
+      return res.status(404).json({ error: 'No se encontró el usuario para la reserva' });
+    }
+
+    const fechaFormateada = new Date(info.fecha).toLocaleDateString('es-MX', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+
+    // Contenido personalizado según el estado
+    let asunto = '';
+    let mensaje = '';
+
+    if (estado === 'confirmada') {
+      asunto = '¡Tu reserva ha sido confirmada!';
+      mensaje = `
+        <p>Hola ${info.usuario_nombre},</p>
+        <p>Tu reserva para el día <strong>${fechaFormateada}</strong> ha sido <strong>confirmada</strong>.</p>
+        <p>Paquete: <strong>${info.paquete_nombre} - $${info.precio.toLocaleString('es-MX')}</strong></p>
+        <p>Gracias por confiar en <strong>Producciones GH</strong>.</p>
+      `;
+    } else if (estado === 'cancelada') {
+      asunto = 'Tu reserva ha sido cancelada';
+      mensaje = `
+        <p>Hola ${info.usuario_nombre},</p>
+        <p>Lamentamos informarte que tu reserva para el <strong>${fechaFormateada}</strong> ha sido <strong>cancelada</strong>.</p>
+        <p>Si tienes alguna duda, contáctanos.</p>
+      `;
+    }
+
+    // Enviar correo al usuario si corresponde
+    if (asunto && mensaje) {
+      await transporter.sendMail({
+        from: 'Producciones GH <no-reply@produccionesgh.com>',
+        to: info.email,
+        subject: asunto,
+        html: mensaje
+      });
+    }
+
     res.json({ success: true });
   } catch (err) {
+    console.error('Error actualizando reserva:', err);
     res.status(500).json({ error: 'Error actualizando reserva' });
   }
 });
+
+
 
 //Delete y actualizar en el calendario 
 app.delete('/api/reservas/:id', async (req, res) => {
