@@ -5,21 +5,29 @@ import { Injectable } from '@angular/core';
 })
 export class GaleriaService {
   private archivos: string[] = [
-    'assets/galeria/Logo1.jpg',
-    'assets/galeria/Logo2.jpg',
-    'assets/galeria/Video1.mp4',
-    'assets/galeria/prueba1.jpg',
-    'assets/galeria/prueba2.jpg',
-    'assets/galeria/prueba3.jpg',
-    'assets/galeria/prueba4.jpg',
-    'assets/galeria/prueba5.jpg',
-    'assets/galeria/prueba6.jpg',
-    'assets/galeria/prueba7.jpg',
-    'assets/galeria/prueba8.jpg',
-    'assets/galeria/prueba9.jpg',
-    'assets/galeria/prueba10.jpg',
-    'assets/galeria/prueba11.jpg',
-    'assets/galeria/prueba12.jpg'
+//IMAGENES
+    'assets/galeria/IMG.jpg',
+    'assets/galeria/IMG 1.jpg',
+    'assets/galeria/IMG 2.jpg',
+    'assets/galeria/IMG 3.jpg',
+    'assets/galeria/IMG 4.jpg',
+    'assets/galeria/IMG 5.jpg',
+    'assets/galeria/IMG 6.jpg',
+    'assets/galeria/IMG 7.jpg',
+    'assets/galeria/IMG 8.jpg',
+    'assets/galeria/IMG 9.jpg',
+    'assets/galeria/IMG 10.jpg',
+    'assets/galeria/IMG 11.jpg',
+
+    //VIDEOS
+    'assets/galeria/Video.mp4',
+    'assets/galeria/Video 1.mp4',
+    'assets/galeria/Video 2.mp4',
+    'assets/galeria/Video 3.mp4',
+    'assets/galeria/Video 4.mp4',
+    'assets/galeria/Video 5.mp4',
+    'assets/galeria/Video 6.mp4',
+
     
     // Agrega aquí más archivos
   ];
