@@ -1,4 +1,4 @@
-<div class="galeria-container">
+<!-- <div class="galeria-container">
     <h2>Galería de Eventos</h2>
     <div class="galeria-miniaturas">
         <div *ngFor="let archivo of archivos; let i = index" class="miniatura" (click)="abrirModal(archivo)">
@@ -14,7 +14,7 @@
     </div>
 </div>
 
-<!-- Modal para mostrar la imagen/video en grande -->
+<!-- Modal para mostrar la imagen/video en grande 
 <div *ngIf="modalAbierto" class="modal" (click)="cerrarModal()">
     <div class="modal-contenido" (click)="$event.stopPropagation()">
         <span class="cerrar-modal" (click)="cerrarModal()">&times;</span>
@@ -28,4 +28,39 @@
             <img [src]="archivoSeleccionado" class="modal-imagen" alt="Evento">
         </ng-template>
     </div>
+</div> -->
+
+<div class="galeria-container">
+  <h2>Galería de Eventos</h2>
+  <div class="galeria-miniaturas">
+    <div *ngFor="let archivo of archivos" class="miniatura" (click)="abrirModal(archivo)">
+      <ng-container *ngIf="archivo.url.endsWith('.mp4'); else imagenMiniatura">
+        <video class="miniatura-video">
+          <source [src]="archivo.url" type="video/mp4">
+        </video>
+      </ng-container>
+      <ng-template #imagenMiniatura>
+        <img [src]="archivo.url" class="miniatura-imagen" [alt]="archivo.descripcion">
+      </ng-template>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div *ngIf="modalAbierto && archivoSeleccionado" class="modal" (click)="cerrarModal()">
+  <div class="modal-contenido" (click)="$event.stopPropagation()">
+    <span class="cerrar-modal" (click)="cerrarModal()">&times;</span>
+
+    <ng-container *ngIf="archivoSeleccionado.url.endsWith('.mp4'); else imagenGrande">
+      <video class="modal-video" controls autoplay>
+        <source [src]="archivoSeleccionado.url" type="video/mp4">
+      </video>
+    </ng-container>
+    <ng-template #imagenGrande>
+      <img [src]="archivoSeleccionado.url" class="modal-imagen" [alt]="archivoSeleccionado.descripcion">
+    </ng-template>
+
+    <!-- Descripción -->
+    <p class="modal-descripcion">{{ archivoSeleccionado.descripcion }}</p>
+  </div>
 </div>

@@ -81,3 +81,10 @@
     width: 800px;
     height: 450px;
 }
+
+.modal-descripcion {
+  margin-top: 15px;
+  font-size: 16px;
+  color: #333;
+  text-align: center;
+}

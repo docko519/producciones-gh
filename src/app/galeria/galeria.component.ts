@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { GaleriaService } from '../services/galeria.service';
+import { GaleriaService, ArchivoGaleria  } from '../services/galeria.service';
 
 @Component({
   selector: 'app-galeria',
@@ -7,9 +7,9 @@ import { GaleriaService } from '../services/galeria.service';
   styleUrls: ['./galeria.component.css']
 })
 export class GaleriaComponent implements OnInit {
-  archivos: string[] = [];
+  archivos: ArchivoGaleria[] = [];
   modalAbierto: boolean = false;
-  archivoSeleccionado: string = '';
+  archivoSeleccionado: ArchivoGaleria | null = null;
 
   constructor(private galeriaService: GaleriaService) { }
 
@@ -17,13 +17,13 @@ export class GaleriaComponent implements OnInit {
     this.archivos = this.galeriaService.getArchivos();
   }
 
-  abrirModal(archivo: string): void {
+   abrirModal(archivo: ArchivoGaleria): void {
     this.archivoSeleccionado = archivo;
     this.modalAbierto = true;
   }
 
   cerrarModal(): void {
     this.modalAbierto = false;
-    this.archivoSeleccionado = ''; // Limpiar el archivo seleccionado al cerrar el modal
+    this.archivoSeleccionado = null; // Limpiar el archivo seleccionado al cerrar el modal
   }
 }

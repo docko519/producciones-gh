@@ -317,7 +317,7 @@ app.post('/api/reservas', async (req, res) => {
     // Correo al administrador
     const mailOptions = {
       from: 'Producciones GH <no-reply@produccionesgh.com>',
-      to: 'produccionesgh1117@gmail.com', // dirección del administrador
+      to: 'produccionesgh1117@gmail.com', 
       subject: 'Nueva reserva recibida',
       html: `
         <h3>Se ha registrado una nueva reserva</h3>
